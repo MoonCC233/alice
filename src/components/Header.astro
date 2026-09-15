@@ -1,0 +1,668 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
+import IconArchive from "@/assets/icons/IconArchive.svg";
+import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
+import IconMoon from "@/assets/icons/IconMoon.svg";
+import IconHome from "@/assets/icons/IconHome.svg";
+import IconFileText from "@/assets/icons/IconFileText.svg";
+import IconHash from "@/assets/icons/IconHash.svg";
+import IconUser from "@/assets/icons/IconUser.svg";
+import IconX from "@/assets/icons/IconX.svg";
+import Logo from "@/assets/icons/Logo.svg";
+import { stripBase, stripLocale } from "@/utils/withBase";
+import { useTranslations } from "@/i18n";
+import config from "@/config";
+
+const { site, features } = config;
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+
+// Locale URL prefix used by the client-side active-link resolver.
+// astro.config.ts: routing.prefixDefaultLocale = false and only "zh" exists,
+// so the default locale has no URL prefix. When a prefixed secondary locale
+// (e.g. "en") is added, this must become `/${locale}` for that locale.
+const localePrefix = "";
+
+// Strip the base prefix so isActive comparisons work regardless of deploy subdirectory.
+// e.g. with base "/blog": "/blog/posts/slug" → "/posts/slug"
+const relativePath = stripBase(Astro.url.pathname);
+const pathWithoutTrailingSlash =
+  relativePath.endsWith("/") && relativePath !== "/"
+    ? relativePath.slice(0, -1)
+    : relativePath;
+
+const currentPath = stripLocale(pathWithoutTrailingSlash, locale);
+
+const isHome = currentPath === "" || currentPath === "/";
+
+const isActive = (path: string) => {
+  const currentPathArray = currentPath.split("/").filter(p => p.trim());
+  const pathArray = path.split("/").filter(p => p.trim());
+  return currentPath === path || currentPathArray[0] === pathArray[0];
+};
+
+const navItem =
+  "nav-item relative z-10 flex items-center gap-1.5 rounded-full px-4 py-2 text-[15px] leading-none font-semibold whitespace-nowrap transition-[color,transform] duration-200 active:scale-[0.93]";
+const navIconLink =
+  "relative grid size-9 place-items-center rounded-full transition-all duration-200 hover:bg-muted/60 hover:text-foreground active:scale-95 max-sm:size-10";
+const island =
+  "bg-background/80 border-border animate-header-in pointer-events-auto flex h-14 flex-none items-center rounded-full border backdrop-blur-md";
+---
+
+<a
+  id="skip-to-content"
+  href="#main-content"
+  class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4"
+>
+  {t.a11y.skipToContent}
+</a>
+
+<!--
+  Floating header, single-pill style:
+  [ avatar | nav items with sliding dark indicator ]  [ utilities island ]
+
+  transition:persist keeps this DOM alive across View Transitions, so the
+  header (and its animations/state) never "reloads" when navigating pages.
+  Active-link highlighting is refreshed by JS on astro:after-swap instead.
+
+  Scroll states (set via JS):
+    data-scrolled → islands slide inwards, towards the centered nav
+    data-hidden   → scrolled far down + still scrolling → everything hides
+-->
+<header
+  id="site-header"
+  transition:persist="site-header"
+  data-base={import.meta.env.BASE_URL}
+  data-locale-prefix={localePrefix}
+  class="pointer-events-none fixed inset-x-0 top-3 z-40"
+>
+  <div class="header-shell flex items-center justify-between gap-3 px-4 sm:px-5">
+    <!-- Main island: avatar + nav (desktop) / avatar + menu btn (mobile) -->
+    <div class:list={[island, "gap-2 py-1.5 ps-1.5 pe-1.5 sm:ps-2 sm:pe-2"]}>
+      <a
+        href={getRelativeLocaleUrl(locale, "")}
+        class="focus-outline text-foreground hover:text-accent group relative z-10 grid size-11 flex-none place-items-center rounded-full transition-colors duration-200"
+        aria-label={site.title}
+      >
+        <Logo
+          class="size-9 flex-none transition-transform duration-300 group-hover:scale-110"
+          aria-hidden="true"
+        />
+      </a>
+
+      <nav id="site-nav" class="relative hidden sm:block" aria-label={site.title}>
+        <ul class="relative flex items-center gap-0.5">
+          <!-- Sliding dark indicator behind the hovered/active nav item -->
+          <span
+            aria-hidden="true"
+            class="absolute inset-y-0 left-0 z-0 rounded-full opacity-0"
+            id="nav-indicator"
+          >
+          </span>
+          <li>
+            <a
+              href={getRelativeLocaleUrl(locale, "")}
+              class:list={[navItem, "max-md:hidden"]}
+              data-nav-path="/"
+              data-active={isHome ? "true" : "false"}
+            >
+              <IconHome class="nav-icon size-4" aria-hidden="true" />
+              {t.nav.home}
+            </a>
+          </li>
+          <li>
+            <a
+              href={getRelativeLocaleUrl(locale, "posts")}
+              class:list={[navItem]}
+              data-nav-path="/posts"
+              data-active={isActive("/posts") ? "true" : "false"}
+            >
+              <IconFileText class="nav-icon size-4" aria-hidden="true" />
+              {t.nav.posts}
+            </a>
+          </li>
+          <li>
+            <a
+              href={getRelativeLocaleUrl(locale, "tags")}
+              class:list={[navItem]}
+              data-nav-path="/tags"
+              data-active={isActive("/tags") ? "true" : "false"}
+            >
+              <IconHash class="nav-icon size-4" aria-hidden="true" />
+              {t.nav.tags}
+            </a>
+          </li>
+          {
+            features.showArchives && (
+              <li>
+                <a
+                  href={getRelativeLocaleUrl(locale, "archives")}
+                  class:list={[navItem]}
+                  data-nav-path="/archives"
+                  data-active={isActive("/archives") ? "true" : "false"}
+                >
+                  <IconArchive class="nav-icon size-4" aria-hidden="true" />
+                  {t.nav.archives}
+                </a>
+              </li>
+            )
+          }
+          <li>
+            <a
+              href={getRelativeLocaleUrl(locale, "about")}
+              class:list={[navItem]}
+              data-nav-path="/about"
+              data-active={isActive("/about") ? "true" : "false"}
+            >
+              <IconUser class="nav-icon size-4" aria-hidden="true" />
+              {t.nav.about}
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Mobile menu button (only visible nav control on small screens) -->
+      <button
+        id="menu-btn"
+        class="focus-outline relative z-10 grid size-10 place-items-center rounded-full transition-colors duration-200 hover:bg-muted/60 sm:hidden"
+        aria-label={t.a11y.openMenu}
+        aria-expanded="false"
+        aria-controls="menu-items"
+        data-label-open={t.a11y.openMenu}
+        data-label-close={t.a11y.closeMenu}
+      >
+        <IconX id="close-icon" class="hidden" />
+        <IconMenuDeep id="menu-icon" />
+      </button>
+    </div>
+
+    <!-- Right island: utilities -->
+    <div class:list={[island, "h-14 gap-1 px-2.5"]}>
+      {
+        features.lightAndDarkMode && (
+          <button
+            id="theme-btn"
+            class:list={[navIconLink]}
+            title={t.a11y.toggleTheme}
+            aria-label={t.a11y.themeAuto}
+            aria-live="polite"
+          >
+            <IconMoon class="absolute top-1/2 left-1/2 translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+            <IconSunHigh class="absolute top-1/2 left-1/2 translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+          </button>
+        )
+      }
+    </div>
+  </div>
+
+  <!-- Mobile: dropdown panel below the island -->
+  <ul
+    id="menu-items"
+    class="border-border bg-background/95 animate-menu-in absolute inset-x-4 top-full z-40 mt-2 hidden flex-col gap-1 rounded-3xl border p-3 backdrop-blur-md sm:hidden"
+  >
+    <li>
+      <a
+        href={getRelativeLocaleUrl(locale, "")}
+        class:list={[
+          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
+          { "active-nav": isHome },
+        ]}
+        data-nav-path="/"
+      >
+        {t.nav.home}
+      </a>
+    </li>
+    <li>
+      <a
+        href={getRelativeLocaleUrl(locale, "posts")}
+        class:list={[
+          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
+          { "active-nav": isActive("/posts") },
+        ]}
+        data-nav-path="/posts"
+      >
+        {t.nav.posts}
+      </a>
+    </li>
+    <li>
+      <a
+        href={getRelativeLocaleUrl(locale, "tags")}
+        class:list={[
+          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
+          { "active-nav": isActive("/tags") },
+        ]}
+        data-nav-path="/tags"
+      >
+        {t.nav.tags}
+      </a>
+    </li>
+    {
+      features.showArchives && (
+        <li>
+          <a
+            href={getRelativeLocaleUrl(locale, "archives")}
+            class:list={[
+              "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
+              { "active-nav": isActive("/archives") },
+            ]}
+            data-nav-path="/archives"
+          >
+            {t.nav.archives}
+          </a>
+        </li>
+      )
+    }
+    <li>
+      <a
+        href={getRelativeLocaleUrl(locale, "about")}
+        class:list={[
+          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
+          { "active-nav": isActive("/about") },
+        ]}
+        data-nav-path="/about"
+      >
+        {t.nav.about}
+      </a>
+    </li>
+  </ul>
+</header>
+
+<style>
+  /* Sliding indicator: a dark pill gliding between nav items.
+     Position/width are set from JS (transform + width).
+     Colors are declared here (not via utility classes) so the inverted
+     text is guaranteed to contrast with the pill in both themes. */
+  #nav-indicator {
+    background: var(--foreground);
+    inset-block: 0;
+    left: 0;
+    pointer-events: none;
+    transition:
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.2s ease;
+  }
+
+  /* Inverted text while the dark indicator sits behind a nav item. */
+  .nav-item.nav-inverted {
+    color: var(--background);
+  }
+
+  .nav-item:hover:not(.nav-inverted) {
+    color: var(--foreground);
+  }
+
+  /* Click feedback: icon squashes while the item is pressed. */
+  .nav-item .nav-icon {
+    transition:
+      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+      stroke-width 0.18s ease;
+  }
+
+  .nav-item:active .nav-icon {
+    transform: scale(0.72) rotate(-8deg);
+  }
+
+  /* Click pop: the dark indicator bounces once when an item is clicked. */
+  #nav-indicator.indicator-pop {
+    animation: indicator-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes indicator-pop {
+    0% {
+      transform: translateX(var(--indicator-x, 0)) scale(1);
+    }
+    40% {
+      transform: translateX(var(--indicator-x, 0)) scale(1.12);
+    }
+    100% {
+      transform: translateX(var(--indicator-x, 0)) scale(1);
+    }
+  }
+
+  /* Converge: growing inline padding slides the islands towards
+     the centered nav pill while the nav itself stays put. */
+  .header-shell {
+    padding-inline: 1rem;
+    transition:
+      padding-inline 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.3s ease;
+  }
+
+  @media (min-width: 640px) {
+    .header-shell {
+      padding-inline: 1.25rem;
+    }
+
+    #site-header[data-scrolled] .header-shell {
+      padding-inline: clamp(4rem, 12vw, 10rem);
+    }
+  }
+
+  /* Subtle converge on small screens (islands are nearly touching already). */
+  @media (max-width: 639px) {
+    #site-header[data-scrolled] .header-shell {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  /* Hide: scrolled far down and still going → slide up out of view. */
+  #site-header[data-hidden] .header-shell {
+    transform: translateY(-150%);
+    opacity: 0;
+  }
+
+  /* The persisted header node is re-inserted into the DOM on every
+     navigation, and re-insertion restarts CSS animations. Once the first
+     entrance has played (marked via data-entered from JS), the entrance
+     animation must never replay — the header should look "frozen" across
+     route changes, only the page content switches. */
+  #site-header[data-entered] .animate-header-in {
+    animation: none;
+  }
+
+  /* Mobile menu: neutral active/hover emphasis (no theme colour). */
+  #menu-items .active-nav {
+    color: var(--foreground);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .header-shell {
+      transition: opacity 0.3s ease;
+    }
+
+    #nav-indicator {
+      transition: opacity 0.2s ease;
+    }
+
+    .nav-item .nav-icon,
+    .nav-item:active .nav-icon {
+      transition: none;
+      transform: none;
+    }
+
+    #nav-indicator.indicator-pop {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  // ---------------------------------------------------------------------------
+  // NOTE: the <header> uses transition:persist, so its DOM survives View
+  // Transitions. Every setup() below must therefore be IDEMPOTENT (guarded
+  // with a data-flag) — after-swap handlers re-run against the *same* nodes.
+  // ---------------------------------------------------------------------------
+
+  // Resolve a raw URL path (e.g. "/zh/posts/x/" or "/blog/en/posts/")
+  // against the configured base + locale prefix → "" or "/posts/x".
+  function resolveNavPath(header: HTMLElement, rawPath: string): string {
+    const base = header.dataset.base || "/";
+    const localePrefix = header.dataset.localePrefix || "";
+    let path = rawPath;
+    if (base && base !== "/" && path.startsWith(base)) {
+      path = path.slice(base.length);
+    }
+    if (localePrefix && path.startsWith(localePrefix)) {
+      path = path.slice(localePrefix.length);
+    }
+    return path.replace(/\/+$/, "");
+  }
+
+  // Refresh active-link highlighting from the current location.
+  // Runs on load and after every astro:after-swap (the persisted header keeps
+  // stale server-rendered state otherwise).
+  function updateHeaderActive() {
+    const header = document.getElementById("site-header");
+    if (!header) return;
+
+    const currentPath = resolveNavPath(header, window.location.pathname);
+    const firstSegment = (p: string) => p.split("/").filter(Boolean)[0] ?? "";
+
+    // data-nav-path may list several paths (comma-separated) for grouped
+    // nav items, e.g. the Posts group covering /posts, /tags and /archives.
+    const matchesNavPath = (el: HTMLElement) =>
+      (el.dataset.navPath || "/")
+        .split(",")
+        .map(p => p.trim())
+        .filter(Boolean)
+        .some(navPathRaw => {
+          const navPath = resolveNavPath(header, navPathRaw);
+          return (
+            currentPath === navPath ||
+            firstSegment(currentPath) === firstSegment(navPath)
+          );
+        });
+
+    header
+      .querySelectorAll<HTMLElement>("[data-nav-path]")
+      .forEach(el => {
+        const active = matchesNavPath(el);
+
+        if (el.classList.contains("nav-item")) {
+          if (active) el.setAttribute("data-active", "true");
+          else el.removeAttribute("data-active");
+        } else {
+          el.classList.toggle("active-nav", active);
+        }
+      });
+
+    // Glide the indicator onto the (visible) active nav item.
+    const nav = document.getElementById("site-nav");
+    const indicator = document.getElementById("nav-indicator");
+    if (!nav || !indicator) return;
+
+    const links = [
+      ...nav.querySelectorAll<HTMLAnchorElement>(".nav-item"),
+    ];
+    if (links.length === 0) return;
+    const visible = links.filter(link => link.offsetParent !== null);
+    const pool = visible.length > 0 ? visible : links;
+    const target =
+      pool.find(link => link.getAttribute("data-active") === "true") ??
+      pool[0];
+    if (target) {
+      const x = `${target.offsetLeft}px`;
+      // Keep the custom property in sync so the pop keyframe can reuse it.
+      indicator.style.setProperty("--indicator-x", x);
+      indicator.style.width = `${target.offsetWidth}px`;
+      indicator.style.transform = `translateX(${x})`;
+      links.forEach(l => l.classList.toggle("nav-inverted", l === target));
+    }
+  }
+
+  function toggleNav() {
+    const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
+    const menuItems = document.querySelector("#menu-items");
+    const menuIcon = document.querySelector("#menu-icon");
+    const closeIcon = document.querySelector("#close-icon");
+
+    if (!menuBtn || !menuItems || !menuIcon || !closeIcon) return;
+    if (menuBtn.dataset.bound === "true") return;
+    menuBtn.dataset.bound = "true";
+
+    const openLabel = menuBtn.dataset.labelOpen ?? "Open menu";
+    const closeLabel = menuBtn.dataset.labelClose ?? "Close menu";
+
+    menuBtn.addEventListener("click", () => {
+      const openMenu = menuBtn.getAttribute("aria-expanded") === "true";
+
+      menuBtn.setAttribute("aria-expanded", openMenu ? "false" : "true");
+      menuBtn.setAttribute("aria-label", openMenu ? openLabel : closeLabel);
+
+      // Rounded panel dropping below the floating island on mobile.
+      menuItems.classList.toggle("hidden", openMenu);
+      menuItems.classList.toggle("flex", !openMenu);
+      menuItems.classList.toggle("animate-menu-in", !openMenu);
+      menuIcon.classList.toggle("hidden", !openMenu);
+      closeIcon.classList.toggle("hidden", openMenu);
+    });
+  }
+
+  // Close the mobile menu (e.g. after navigating with it open).
+  function closeMenus() {
+    const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
+    const menuItems = document.querySelector("#menu-items");
+    const menuIcon = document.querySelector("#menu-icon");
+    const closeIcon = document.querySelector("#close-icon");
+
+    if (menuBtn && menuItems && menuIcon && closeIcon) {
+      menuBtn.setAttribute("aria-expanded", "false");
+      menuItems.classList.add("hidden");
+      menuItems.classList.remove("flex");
+      menuIcon.classList.remove("hidden");
+      closeIcon.classList.add("hidden");
+    }
+  }
+
+  // Sliding nav indicator: a dark pill that glides to the hovered item
+  // and settles back on the active one when the pointer leaves.
+  function setupNavIndicator() {
+    const nav = document.getElementById("site-nav");
+    const indicator = document.getElementById("nav-indicator");
+    if (!nav || !indicator) return;
+
+    if (nav.dataset.bound !== "true") {
+      nav.dataset.bound = "true";
+
+      const links = [
+        ...nav.querySelectorAll<HTMLAnchorElement>(".nav-item"),
+      ];
+
+      const move = (link: HTMLAnchorElement) => {
+        const x = `${link.offsetLeft}px`;
+        indicator.style.setProperty("--indicator-x", x);
+        indicator.style.width = `${link.offsetWidth}px`;
+        indicator.style.transform = `translateX(${x})`;
+        links.forEach(l => l.classList.toggle("nav-inverted", l === link));
+      };
+
+      links.forEach(link => {
+        link.addEventListener("mouseenter", () => move(link));
+        // Click pop: replay the indicator bounce animation.
+        link.addEventListener("click", () => {
+          indicator.classList.remove("indicator-pop");
+          void indicator.offsetWidth; // restart the animation
+          indicator.classList.add("indicator-pop");
+        });
+      });
+      indicator.addEventListener("animationend", () => {
+        indicator.classList.remove("indicator-pop");
+      });
+      nav.addEventListener("mouseleave", () => updateHeaderActive());
+    }
+
+    // Initial placement, re-measure once fonts settle.
+    updateHeaderActive();
+    indicator.style.opacity = "1";
+    document.fonts?.ready.then(() => updateHeaderActive());
+    window.addEventListener("resize", () => updateHeaderActive());
+  }
+
+  // Floating header scroll behaviour:
+  //  1. scrolled a little  → islands converge towards the nav (data-scrolled)
+  //  2. scrolled far + still going down → slide up and hide (data-hidden)
+  //  3. any upward scroll  → reappear
+  function handleHeaderScroll() {
+    const header = document.getElementById("site-header");
+    if (!header) return;
+
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const current = document.getElementById("site-header");
+      if (!current) return;
+      const y = window.scrollY;
+
+      if (y > 24) current.setAttribute("data-scrolled", "");
+      else current.removeAttribute("data-scrolled");
+
+      const delta = y - lastY;
+      if (y > 260 && delta > 4) {
+        current.setAttribute("data-hidden", "");
+      } else if (delta < -4 || y <= 260) {
+        current.removeAttribute("data-hidden");
+      }
+      lastY = y;
+    };
+
+    document.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  function handleSkipToContent() {
+    const skipLink = document.getElementById("skip-to-content");
+    if (!skipLink) return;
+    if (skipLink.dataset.bound === "true") return;
+    skipLink.dataset.bound = "true";
+
+    skipLink.addEventListener("click", e => {
+      if (
+        e.defaultPrevented ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.button !== 0
+      )
+        return;
+      e.preventDefault();
+      const target = document.getElementById("main-content");
+      if (target) {
+        target.setAttribute("tabindex", "-1");
+        target.addEventListener(
+          "blur",
+          () => target.removeAttribute("tabindex"),
+          {
+            once: true,
+          }
+        );
+        target.focus();
+        target.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  }
+
+  // The header uses transition:persist, so its DOM node is kept alive but
+  // RE-INSERTED on every navigation — which restarts CSS animations (the
+  // entrance slide-in would replay on each route change, looking like the
+  // header "reloads"). Mark the node once the entrance has played; the
+  // attribute travels with the persisted node across swaps, and the CSS
+  // rule above then suppresses the entrance animation for good.
+  function markHeaderEntered() {
+    const header = document.getElementById("site-header");
+    if (!header) return;
+    header.dataset.entered = "true";
+    // Clear a half-finished click-pop so re-insertion cannot restart it.
+    document.getElementById("nav-indicator")?.classList.remove("indicator-pop");
+  }
+  document.addEventListener("astro:after-swap", markHeaderEntered);
+  // Initial page load: let the entrance animation finish once, then mark.
+  window.addEventListener("load", () => setTimeout(markHeaderEntered, 600));
+
+  toggleNav();
+  document.addEventListener("astro:after-swap", toggleNav);
+
+  setupNavIndicator();
+  document.addEventListener("astro:after-swap", setupNavIndicator);
+
+  handleSkipToContent();
+  document.addEventListener("astro:after-swap", handleSkipToContent);
+
+  // The persisted header keeps stale active state across navigations —
+  // refresh it (and close menus) after each swap.
+  document.addEventListener("astro:after-swap", () => {
+    updateHeaderActive();
+    closeMenus();
+  });
+
+  // Bound once on `document` (persists across view transitions); the handler
+  // looks up the current header element on every event.
+  if (!(window as unknown as { __headerScrollBound?: boolean }).__headerScrollBound) {
+    (window as unknown as { __headerScrollBound?: boolean }).__headerScrollBound =
+      true;
+    handleHeaderScroll();
+  }
+</script>

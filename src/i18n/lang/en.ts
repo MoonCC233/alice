@@ -1,0 +1,99 @@
+import type { UIStrings } from "../types";
+
+export default {
+  nav: {
+    home: "Home",
+    posts: "Posts",
+    tags: "Tags",
+    about: "About",
+    archives: "Archives",
+    search: "Search",
+  },
+  post: {
+    publishedAt: "Published at",
+    updatedAt: "Updated",
+    sharePostIntro: "Share this post:",
+    sharePostOn: "Share this post on {{platform}}",
+    sharePostViaEmail: "Share this post via email",
+    tagLabel: "Tags",
+    backToTop: "Back to top",
+    toc: "On this page",
+    goBack: "Go back",
+    editPage: "Edit page",
+    previousPost: "Previous Post",
+    nextPost: "Next Post",
+  },
+  pagination: {
+    prev: "Prev",
+    next: "Next",
+    page: "Page",
+    paginationNav: "Pagination Navigation",
+  },
+  home: {
+    socialLinks: "Social Links",
+    featured: "Featured",
+    recentPosts: "Recent Posts",
+    allPosts: "All Posts",
+    greeting: "Mingalaba",
+    description:
+      "AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro blog theme. This theme follows best practices and provides accessibility out of the box. Light and dark mode are supported by default. Moreover, additional color schemes can also be configured.",
+    readMore: "Read the blog posts or check",
+    about: "About",
+    role: "Developer / Designer",
+    startReading: "Start Reading",
+    sourceCode: "Source Code",
+    moreAboutMe: "More about me",
+  },
+  footer: {
+    copyright: "Copyright",
+    allRightsReserved: "All rights reserved.",
+    poweredBy: "Powered by {{theme}}",
+  },
+  pages: {
+    tagTitle: "Tag",
+    tagDesc: "All the articles with the tag",
+
+    tagsTitle: "Tags",
+    tagsDesc: "All the tags used in posts.",
+
+    postsTitle: "Posts",
+    postsDesc: "All the articles I've posted.",
+
+    archivesTitle: "Archives",
+    archivesDesc: "All the articles I've archived.",
+
+    searchTitle: "Search",
+    searchDesc: "Search any article ...",
+  },
+  a11y: {
+    skipToContent: "Skip to content",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    toggleTheme: "Toggle theme",
+    searchPlaceholder: "Search posts...",
+    noResults: "No results found",
+    goToPreviousPage: "Go to previous page",
+    goToNextPage: "Go to next page",
+    rssFeed: "RSS Feed",
+    breadcrumb: "breadcrumb",
+    copyButton: "Copy",
+    copiedButton: "Copied",
+    zoomImage: "Zoom image",
+    imagePreview: "Image preview",
+    closeImagePreview: "Close image preview",
+    sendEmailTo: "Send an email to {{name}}",
+    onPlatform: "{{name}} on {{platform}}",
+    themeAuto: "auto",
+    language: "Switch language",
+    langComingSoon: "Coming soon",
+  },
+  notFound: {
+    title: "404 Not Found",
+    message: "Page Not Found",
+    goHome: "Go back home",
+  },
+  dev: {
+    modeWarning:
+      "DEV mode Warning! You need to build the project at least once to see the search results during development.",
+  },
+} satisfies UIStrings;

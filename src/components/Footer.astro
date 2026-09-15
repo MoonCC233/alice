@@ -1,0 +1,117 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Socials from "./Socials.astro";
+import GithubIcon from "@/assets/icons/socials/github.svg";
+import { useTranslations, tplStr } from "@/i18n";
+
+type Props = {
+  noMarginTop?: boolean;
+} & HTMLAttributes<"footer">;
+
+const { noMarginTop = false, class: className, ...attrs } = Astro.props;
+
+// 主题信息：名称 / 作者 / 相关链接
+const THEME = {
+  name: "Alice",
+  author: "TeAnli",
+  authorUrl: "https://github.com/TeAnli",
+  repoUrl: "https://github.com/TeAnli/astro-theme-alice",
+};
+
+const t = useTranslations(Astro.currentLocale);
+const locale = Astro.currentLocale ?? "en";
+
+const now = new Date();
+const currentYear = now.getFullYear();
+
+// 服务端先渲染一份初始时间，客户端脚本会实时更新
+const datetimeFormatter = new Intl.DateTimeFormat(locale, {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+const initialDatetime = datetimeFormatter.format(now);
+---
+
+<footer
+  class:list={["app-layout", { "mt-auto": !noMarginTop }, className]}
+  {...attrs}
+>
+  <div
+    class="border-border flex flex-col items-center justify-between gap-3 border-t py-6 sm:flex-row-reverse sm:py-4"
+  >
+    <Socials />
+    <div
+      class="text-muted-foreground flex flex-col items-center gap-1 text-sm sm:items-end"
+    >
+      <p class="flex flex-wrap items-center justify-center gap-x-1 whitespace-nowrap">
+        <span>{t.footer.copyright} &#169; {currentYear}</span>
+        <a
+          href={THEME.authorUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-foreground inline-flex items-center gap-1 font-medium transition-colors"
+        >
+          {THEME.author}
+          <GithubIcon class="size-4 stroke-current" />
+          <span class="sr-only">GitHub</span>
+        </a>
+        <span aria-hidden="true">&middot;</span>
+        <a
+          href={THEME.repoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-foreground transition-colors"
+        >
+          {tplStr(t.footer.poweredBy, { theme: THEME.name })}
+        </a>
+        <span class="hidden sm:inline" aria-hidden="true">&middot;</span>
+        <span class="hidden sm:inline">{t.footer.allRightsReserved}</span>
+      </p>
+      <time
+        id="footer-datetime"
+        class="text-xs tabular-nums"
+        datetime={now.toISOString()}
+      >
+        {initialDatetime}
+      </time>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 页脚实时时钟：每秒更新一次，并兼容 View Transitions 页面切换
+  const fmt = new Intl.DateTimeFormat(
+    document.documentElement.lang || undefined,
+    {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }
+  );
+
+  let timer: ReturnType<typeof setInterval> | undefined;
+
+  function updateDatetime() {
+    const el = document.getElementById("footer-datetime");
+    if (el) el.textContent = fmt.format(new Date());
+  }
+
+  function startClock() {
+    updateDatetime();
+    clearInterval(timer);
+    timer = setInterval(updateDatetime, 1000);
+  }
+
+  startClock();
+  // 页面切换后重新绑定（ClientRouter 会替换 DOM，元素引用会失效）
+  document.addEventListener("astro:page-load", startClock);
+</script>

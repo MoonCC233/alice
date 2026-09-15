@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+@import "rehype-callouts/theme/obsidian";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@layer base {
+  * {
+    @apply border-border outline-accent/75;
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-muted) transparent;
+  }
+  a,
+  button,
+  #main-content {
+    @apply outline-accent outline-offset-1 focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility max-w-app {
+  @apply max-w-3xl;
+}
+
+@utility app-layout {
+  @apply max-w-app mx-auto w-full px-4;
+}
+
+/* Active nav item: colour + weight emphasis (no decoration line). */
+@utility active-nav {
+  @apply text-accent font-semibold;
+}
+
+/* ===== Motion ===== */
+
+/* Theme-switch circular reveal (see scripts/theme.ts):
+   disable the default view-transition cross-fade so the clip-path
+   animation on ::view-transition-new(root) is the only motion. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Smooth anchor scrolling (TOC jumps), offset for the sticky header. */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@keyframes header-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-header-in {
+  animation: header-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-menu-in {
+  animation: menu-in 0.25s ease-out both;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-up-delayed {
+  animation: fade-up 0.5s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-header-in,
+  .animate-menu-in,
+  .animate-fade-up,
+  .animate-fade-up-delayed {
+    animation: none;
+  }
+}
+
+/* Floating pill header: reserve top space so content clears the bar. */
+main#main-content {
+  margin-top: 5.5rem;
+}
+
+/* Keep anchored headings clear of the floating header. */
+#article :is(h2, h3, h4, h5, h6) {
+  scroll-margin-block-start: 6rem;
+}
+
+:target {
+  scroll-margin-block: 1rem;
+}
