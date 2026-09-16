@@ -1,0 +1,333 @@
+---
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { getCollection } from "astro:content";
+import IconMapPin from "@/assets/icons/IconMapPin.svg";
+import IconCalendar from "@/assets/icons/IconCalendar.svg";
+import Logo from "@/assets/icons/Logo.svg";
+import { getAssetPath } from "@/utils/withBase";
+import { getYearHeatmap } from "@/utils/getPostActivity";
+import { useTranslations, tplStr } from "@/i18n";
+import config from "@/config";
+
+const { site, hero } = config;
+const locale = Astro.currentLocale ?? site.lang;
+const t = useTranslations(locale);
+
+const posts = await getCollection("posts");
+const heat = getYearHeatmap(posts);
+
+// Row-major cells (week outer, month inner) with a per-column stagger so the
+// heatmap "waves" in on load. Opacity tiers mirror the calendar widget:
+// count 1/2/3/4+ → 0.45 / 0.65 / 0.85 / 1.
+const OPACITIES = [0.45, 0.65, 0.85, 1];
+const heatCells = heat.months[0].flatMap((_, week) =>
+  heat.months.map((monthCounts, month) => ({
+    month,
+    week,
+    count: monthCounts[week],
+    delay: month * 40,
+  }))
+);
+
+// Avatar: render an <img> only when the configured file exists in /public,
+// otherwise fall back to the theme logo so the hero never shows a broken image.
+const hasAvatar =
+  Boolean(hero.avatar) &&
+  existsSync(join(process.cwd(), "public", hero.avatar));
+const avatarUrl = hero.avatar ? getAssetPath(hero.avatar) : "";
+
+// Site age ("已运行 N 天") from hero.since.
+let runningDays: number | null = null;
+if (hero.since) {
+  const since = new Date(`${hero.since}T00:00:00`);
+  if (!Number.isNaN(since.getTime())) {
+    runningDays = Math.max(
+      0,
+      Math.floor((Date.now() - since.getTime()) / 86_400_000)
+    );
+  }
+}
+---
+
+<section
+  id="hero"
+ class="grid gap-10 pt-8 pb-2 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8 lg:gap-10"
+>
+  <!-- Left: avatar, intro, meta; vertically centered on desktop to balance
+       the taller heatmap card on the right -->
+  <div class="flex min-w-0 flex-col md:justify-center">
+    <div class="animate-fade-up flex items-center gap-4">
+      {
+        hasAvatar ? (
+          <img
+            src={avatarUrl}
+            alt={site.author}
+            width="96"
+            height="96"
+            loading="eager"
+            class="border-border size-20 flex-none rounded-2xl border object-cover sm:size-24"
+          />
+        ) : (
+          <span class="border-border bg-muted/50 grid size-20 flex-none place-items-center rounded-2xl border sm:size-24">
+            <Logo class="size-12" aria-hidden="true" />
+          </span>
+        )
+      }
+      <div class="min-w-0">
+        <p class="text-xl font-semibold tracking-wide sm:text-2xl">
+          {site.author}
+        </p>
+        {
+          hero.role && (
+            <p class="text-muted-foreground mt-1.5 text-sm">{hero.role}</p>
+          )
+        }
+      </div>
+    </div>
+
+    <p
+      class="text-muted-foreground animate-fade-up mt-5 text-[15px] leading-relaxed"
+      style="animation-delay:0.08s"
+    >
+      {site.description}
+    </p>
+
+    <ul
+      class="animate-fade-up mt-5 space-y-2.5 text-sm"
+      style="animation-delay:0.14s"
+    >
+      {
+        site.location && (
+          <li class="text-muted-foreground flex items-center gap-2">
+            <IconMapPin class="text-accent size-4 shrink-0" aria-hidden="true" />
+            {site.location}
+          </li>
+        )
+      }
+      {
+        runningDays !== null && (
+          <li class="text-muted-foreground flex items-center gap-2">
+            <IconCalendar
+              class="text-accent size-4 shrink-0"
+              aria-hidden="true"
+            />
+            {tplStr(t.hero.siteRunning, { days: runningDays })}
+          </li>
+        )
+      }
+    </ul>
+  </div>
+
+  <!-- Right: update heatmap + stats -->
+  <div class="min-w-0">
+    <div
+      class="bg-background/60 card-in rounded-3xl p-5 backdrop-blur-sm sm:p-6"
+    >
+      <div class="flex items-baseline justify-between gap-3">
+        <p class="flex items-baseline gap-2 text-base font-semibold tracking-wide">
+          {t.hero.heatmapTitle}
+          <span class="text-muted-foreground text-xs font-normal">
+            {tplStr(t.hero.heatmapWindow, { year: heat.year })}
+          </span>
+        </p>
+        <span class="text-accent text-xs font-medium">
+          {tplStr(t.hero.updatesCount, { count: heat.yearEvents })}
+        </span>
+      </div>
+
+      <!-- Numeric month labels 1–12 + heatmap grid share the same fluid grid
+           (12 equal tracks + uniform gap); cells keep square via aspect-ratio.
+           The block fills the card on mobile and is capped on desktop so
+           cells stay small. -->
+      <div class="mt-5 w-full">
+        <div
+          aria-hidden="true"
+          class="heat-labels text-muted-foreground text-center text-[10px] leading-none"
+        >
+          {Array.from({ length: 12 }, (_, i) => (
+            <span>{i + 1}</span>
+          ))}
+        </div>
+
+        <!-- 12 month columns × 4 week rows, row-major order -->
+        <div
+          id="hero-heatmap"
+          class="heat-grid mt-1.5"
+          role="img"
+          aria-label={tplStr(t.hero.heatmapAria, {
+            year: heat.year,
+            count: heat.yearEvents,
+          })}
+          data-tip-template={t.hero.cellTooltip}
+        >
+          {
+            heatCells.map(({ month, week, count, delay }) => (
+              <span
+                class:list={[
+                  "heat-cell rounded-[4px]",
+                  count === 0 ? "bg-muted" : "bg-accent",
+                ]}
+                style={`animation-delay:${delay}ms${count > 0 ? `;opacity:${OPACITIES[Math.min(count, 4) - 1]}` : ""}`}
+                data-month={month + 1}
+                data-week={week + 1}
+                data-count={count}
+              />
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Fluid 12-column grid with a uniform gap; cells fill their track and stay
+     square via aspect-ratio, so the heatmap spans the full card width on
+     every breakpoint (same style as mobile). */
+  :root {
+    --heat-gap: 4px;
+  }
+
+  .heat-labels,
+  .heat-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: var(--heat-gap);
+  }
+
+  /* Heatmap cell: pop in with a per-column stagger (delay set inline).
+     `backwards` fill keeps the pre-delay state hidden but releases the
+     element once finished. */
+  .heat-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    cursor: pointer;
+    animation: heat-cell-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    transition: box-shadow 0.15s ease;
+  }
+
+  /* Calendar-widget style hover: a tight accent ring around the cell. */
+  .heat-cell:hover {
+    box-shadow: 0 0 1px 1.5px var(--accent);
+  }
+
+  @keyframes heat-cell-in {
+    from {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+  }
+
+  /* Right card: rise in with a slight scale-up for depth. */
+  .card-in {
+    animation: card-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
+  }
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.98);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .heat-cell,
+    .card-in {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  // Heatmap hover tooltip. Event delegation + dataset guard, so it keeps
+  // working (and stays idempotent) across Astro View Transitions.
+  function setupHeatmapTip() {
+    const grid = document.getElementById("hero-heatmap");
+    if (!grid || grid.dataset.tipBound === "true") return;
+    grid.dataset.tipBound = "true";
+
+    let tip = document.getElementById(
+      "hero-heat-tip"
+    ) as HTMLDivElement | null;
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.id = "hero-heat-tip";
+      tip.className =
+        "bg-foreground text-background pointer-events-none fixed top-0 left-0 z-50 rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap opacity-0 shadow-lg will-change-transform duration-150 ease-out transition-[opacity,transform]";
+      document.body.appendChild(tip);
+    }
+
+    const template = grid.dataset.tipTemplate ?? "{{count}}";
+    // Tooltip: "{{month}}月第{{week}}周，{{count}}篇文章" — read straight from
+    // the cell's dataset. The tip glides via a transform transition: it
+    // follows the cursor horizontally (clamped to the hovered cell) and sits
+    // right above the cell, so moving across the grid feels fluid.
+    const fill = (tpl: string, vars: Record<string, string | number>) =>
+      tpl.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
+        vars[key] !== undefined ? String(vars[key]) : ""
+      );
+
+    let lastCell: HTMLElement | null = null;
+    // Cache tip dimensions: re-measure only when the text changes, so
+    // pointermove never triggers a synchronous layout read.
+    let tipW = 0;
+    let tipH = 0;
+
+    const moveTo = (cell: HTMLElement, cursorX: number) => {
+      if (!tip) return;
+      const rect = cell.getBoundingClientRect();
+      const pad = 8;
+      // Follow the cursor, but stay anchored to the hovered cell.
+      let x = cursorX - tipW / 2;
+      x = Math.max(Math.min(x, rect.right - tipW), rect.left);
+      x = Math.max(pad, Math.min(x, window.innerWidth - tipW - pad));
+      let y = rect.top - tipH - 6;
+      if (y < pad) y = rect.bottom + 6; // flip below when there's no room
+      tip.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`;
+    };
+
+    const syncText = (cell: HTMLElement) => {
+      if (!tip || cell === lastCell) return;
+      lastCell = cell;
+      tip.textContent = fill(template, {
+        month: Number(cell.dataset.month ?? 0),
+        week: Number(cell.dataset.week ?? 0),
+        count: Number(cell.dataset.count ?? 0),
+      });
+      tipW = tip.offsetWidth;
+      tipH = tip.offsetHeight;
+    };
+
+    grid.addEventListener("pointerover", e => {
+      const cell = (e.target as HTMLElement).closest<HTMLElement>("[data-count]");
+      if (!cell || !tip) return;
+      syncText(cell);
+      // First show: place instantly (no glide from the old position).
+      if (tip.style.opacity !== "1") {
+        const prevTransition = tip.style.transition;
+        tip.style.transition = "opacity 0.15s ease";
+        moveTo(cell, e.clientX);
+        tip.style.opacity = "1";
+        requestAnimationFrame(() => {
+          tip.style.transition = prevTransition;
+        });
+      } else {
+        moveTo(cell, e.clientX);
+      }
+    });
+    grid.addEventListener("pointermove", e => {
+      const cell = (e.target as HTMLElement).closest<HTMLElement>("[data-count]");
+      if (!cell || !tip || tip.style.opacity !== "1") return;
+      syncText(cell);
+      moveTo(cell, e.clientX);
+    });
+    grid.addEventListener("pointerleave", () => {
+      lastCell = null;
+      if (tip) tip.style.opacity = "0";
+    });
+  }
+
+  setupHeatmapTip();
+  document.addEventListener("astro:after-swap", setupHeatmapTip);
+</script>

@@ -86,10 +86,34 @@ interface ShareLink {
   linkTitle?: string;
 }
 
+/** A notable day shown with a countdown bar in the home hero. */
+interface HeroEventConfig {
+  /** Event display name, e.g. "中秋节" */
+  name: string;
+  /** Event date in "YYYY-MM-DD" format (interpreted as a local date) */
+  date: string;
+}
+
+/** Home hero sidebar (personal info + post contribution heatmap). */
+interface HeroConfig {
+  /** Show the hero section on the home page. Defaults to true. */
+  enabled?: boolean;
+  /** Identity line under the author name. Falls back to the i18n role string. */
+  role?: string;
+  /** Avatar image path relative to the public directory, e.g. "avatar.png". */
+  avatar?: string;
+  /** Site founding date "YYYY-MM-DD" used for the site-age progress bar. */
+  since?: string;
+  /** Next notable day with a countdown bar (e.g. a festival). */
+  event?: HeroEventConfig;
+}
+
 interface AstroPaperConfig {
   site: SiteConfig;
   posts?: PostsConfig;
   features?: FeaturesConfig;
+  /** Home hero sidebar (personal info + heatmap + countdowns) */
+  hero?: HeroConfig;
   /** Social profile links shown in header/footer */
   socials?: SocialLink[];
   /** Share links shown on post detail pages */
@@ -105,6 +129,13 @@ export interface ResolvedAstroPaperConfig {
   site: ResolvedSiteConfig;
   posts: Required<PostsConfig>;
   features: Required<FeaturesConfig>;
+  hero: {
+    enabled: boolean;
+    role: string;
+    avatar: string;
+    since: string;
+    event?: HeroEventConfig;
+  };
   socials: SocialLink[];
   shareLinks: ShareLink[];
 }

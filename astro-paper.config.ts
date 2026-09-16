@@ -27,6 +27,13 @@ export default defineAstroPaperConfig({
     },
     search: "pagefind",
   },
+  hero: {
+    enabled: true,
+    role: "[全干工程师 / 技术博主]",
+    avatar: "avatar.png",
+    since: "2025-05-07",
+    event: { name: "中秋节", date: "2026-09-25" },
+  },
   socials: [
     { name: "wechat",   url: "https://weixin.qq.com/" },
     { name: "github",   url: "https://github.com/satnaing/astro-paper" },

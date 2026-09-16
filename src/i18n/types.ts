@@ -41,6 +41,22 @@ export interface UIStrings {
     sourceCode: string;
     moreAboutMe: string;
   };
+  hero: {
+    heatmapTitle: string;
+    heatmapWindow: string;
+    updatesCount: string;
+    cellTooltip: string;
+    legendLess: string;
+    legendMore: string;
+    statPosts: string;
+    statActiveDays: string;
+    statThisMonth: string;
+    statLongestStreak: string;
+    unitDay: string;
+    siteRunning: string;
+    eventCountdown: string;
+    heatmapAria: string;
+  };
   footer: {
     copyright: string;
     allRightsReserved: string;

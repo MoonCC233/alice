@@ -32,6 +32,13 @@ const config: ResolvedAstroPaperConfig = {
   },
   socials: userConfig.socials ?? [],
   shareLinks: userConfig.shareLinks ?? [],
+  hero: {
+    enabled: userConfig.hero?.enabled ?? true,
+    role: userConfig.hero?.role ?? "",
+    avatar: userConfig.hero?.avatar ?? "",
+    since: userConfig.hero?.since ?? "",
+    event: userConfig.hero?.event,
+  },
 };
 
 export default config;
