@@ -19,3 +19,7 @@ All notable changes to this project will be documented in this file.
 
 - TOC scrollspy not initializing when the article page is loaded directly
 - TOC anchor jump misalignment caused by a doubled scroll offset
+
+### Changed
+
+- Redesigned footer into a multi-column layout: brand with site description and socials, site info column with post/tag counts, running days, RSS link and a live clock; theme credit moved to a dedicated bottom bar

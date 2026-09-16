@@ -68,6 +68,12 @@ export default {
     copyright: "Copyright",
     allRightsReserved: "All rights reserved.",
     poweredBy: "Powered by {{theme}}",
+    quickLinks: "Quick Links",
+    siteInfo: "Site Info",
+    postCount: "{{count}} posts",
+    tagCount: "{{count}} tags",
+    runningDays: "Running for {{days}} days",
+    localTime: "Local time",
   },
   pages: {
     tagTitle: "Tag",

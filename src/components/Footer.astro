@@ -1,8 +1,10 @@
 ---
 import type { HTMLAttributes } from "astro/types";
+import { getCollection } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
 import Socials from "./Socials.astro";
-import GithubIcon from "@/assets/icons/socials/github.svg";
 import { useTranslations, tplStr } from "@/i18n";
+import config from "@/config";
 
 type Props = {
   noMarginTop?: boolean;
@@ -18,11 +20,26 @@ const THEME = {
   repoUrl: "https://github.com/TeAnli/astro-theme-alice",
 };
 
+const { site, hero } = config;
 const t = useTranslations(Astro.currentLocale);
-const locale = Astro.currentLocale ?? "en";
+const locale = Astro.currentLocale ?? site.lang;
 
+const url = (path: string) => getRelativeLocaleUrl(locale, path);
 const now = new Date();
 const currentYear = now.getFullYear();
+
+// 站点统计：已发布文章数、标签数
+const posts = await getCollection("posts");
+const published = posts.filter(post => !post.data.draft);
+const postCount = published.length;
+const tagCount = new Set(published.flatMap(post => post.data.tags ?? [])).size;
+
+// 建站天数
+const since = hero?.since ? new Date(hero.since) : null;
+const runningDays =
+  since && !Number.isNaN(since.getTime())
+    ? Math.max(0, Math.floor((now.getTime() - since.getTime()) / 86_400_000))
+    : null;
 
 // 服务端先渲染一份初始时间，客户端脚本会实时更新
 const datetimeFormatter = new Intl.DateTimeFormat(locale, {
@@ -41,26 +58,82 @@ const initialDatetime = datetimeFormatter.format(now);
   class:list={["app-layout", { "mt-auto": !noMarginTop }, className]}
   {...attrs}
 >
-  <div
-    class="border-border flex flex-col items-center justify-between gap-3 border-t py-6 sm:flex-row-reverse sm:py-4"
-  >
-    <Socials />
+  <div class="border-border border-t pt-8 pb-6">
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr] lg:gap-6">
+      {/* 品牌栏：站点名 + 简介 + 社交链接 */}
+      <div class="space-y-3 text-center sm:text-left">
+        <p class="text-foreground font-semibold tracking-wide">{site.title}</p>
+        <p class="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
+          {site.description}
+        </p>
+        <div class="flex justify-center sm:justify-start">
+          <Socials />
+        </div>
+      </div>
+
+      {/* 站点信息 */}
+      <div class="text-center sm:text-left">
+        <p class="text-muted-foreground mb-3 text-xs font-semibold tracking-widest uppercase">
+          {t.footer.siteInfo}
+        </p>
+        <ul class="text-muted-foreground space-y-2 text-sm">
+          <li>{tplStr(t.footer.postCount, { count: postCount })}</li>
+          <li>{tplStr(t.footer.tagCount, { count: tagCount })}</li>
+          {
+            runningDays !== null && (
+              <li>{tplStr(t.footer.runningDays, { days: runningDays })}</li>
+            )
+          }
+          <li>
+            <a
+              href={url("rss.xml")}
+              class="hover:text-accent inline-flex items-center gap-1 transition-colors"
+            >
+              RSS
+              <span class="bg-accent/15 text-accent rounded px-1 py-px text-[10px] font-semibold uppercase">
+                XML
+              </span>
+              <span class="sr-only">{t.a11y.rssFeed}</span>
+            </a>
+          </li>
+          <li class="flex items-center justify-center gap-2 sm:justify-start">
+            <span>{t.footer.localTime}</span>
+            <time
+              id="footer-datetime"
+              class="text-foreground tabular-nums"
+              datetime={now.toISOString()}
+            >
+              {initialDatetime}
+            </time>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    {/* 底栏：版权 + 主题署名 */}
     <div
-      class="text-muted-foreground flex flex-col items-center gap-1 text-sm sm:items-end"
+      class="border-border text-muted-foreground mt-8 flex flex-col items-center justify-between gap-2 border-t border-dashed pt-4 text-xs sm:flex-row"
     >
       <p class="flex flex-wrap items-center justify-center gap-x-1 whitespace-nowrap">
         <span>{t.footer.copyright} &#169; {currentYear}</span>
-        <a
-          href={THEME.authorUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hover:text-foreground inline-flex items-center gap-1 font-medium transition-colors"
-        >
-          {THEME.author}
-          <GithubIcon class="size-4 stroke-current" />
-          <span class="sr-only">GitHub</span>
-        </a>
+        {
+          site.profile ? (
+            <a
+              href={site.profile}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hover:text-foreground font-medium transition-colors"
+            >
+              {site.author}
+            </a>
+          ) : (
+            <span class="font-medium">{site.author}</span>
+          )
+        }
         <span aria-hidden="true">&middot;</span>
+        <span>{t.footer.allRightsReserved}</span>
+      </p>
+      <p class="flex items-center gap-1 whitespace-nowrap">
         <a
           href={THEME.repoUrl}
           target="_blank"
@@ -69,16 +142,16 @@ const initialDatetime = datetimeFormatter.format(now);
         >
           {tplStr(t.footer.poweredBy, { theme: THEME.name })}
         </a>
-        <span class="hidden sm:inline" aria-hidden="true">&middot;</span>
-        <span class="hidden sm:inline">{t.footer.allRightsReserved}</span>
+        <span aria-hidden="true">&middot;</span>
+        <a
+          href={THEME.authorUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-foreground transition-colors"
+        >
+          {THEME.author}
+        </a>
       </p>
-      <time
-        id="footer-datetime"
-        class="text-xs tabular-nums"
-        datetime={now.toISOString()}
-      >
-        {initialDatetime}
-      </time>
     </div>
   </div>
 </footer>

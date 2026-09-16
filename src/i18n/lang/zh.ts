@@ -68,6 +68,12 @@ export default {
     copyright: "版权所有",
     allRightsReserved: "保留所有权利。",
     poweredBy: "由 {{theme}} 驱动",
+    quickLinks: "快捷导航",
+    siteInfo: "站点信息",
+    postCount: "{{count}} 篇文章",
+    tagCount: "{{count}} 个标签",
+    runningDays: "已运行 {{days}} 天",
+    localTime: "本地时间",
   },
   pages: {
     tagTitle: "标签",

@@ -65,6 +65,12 @@ export interface UIStrings {
     copyright: string;
     allRightsReserved: string;
     poweredBy: string;
+    quickLinks: string;
+    siteInfo: string;
+    postCount: string;
+    tagCount: string;
+    runningDays: string;
+    localTime: string;
   };
   pages: {
     tagTitle: string;
