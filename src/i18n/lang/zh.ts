@@ -22,6 +22,10 @@ export default {
     editPage: "编辑页面",
     previousPost: "上一篇",
     nextPost: "下一篇",
+    info: "文章信息",
+    wordCount: "字数",
+    readingTimeLabel: "阅读时长",
+    readingTime: "约 {{min}} 分钟",
   },
   pagination: {
     prev: "上一页",

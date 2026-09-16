@@ -276,10 +276,38 @@ const items = tocItems.map(h => {
     let activeId = headingEls[0].id;
     let ticking = false;
 
+    // Segmented progress: mark `id` as active, sections above as passed,
+    // then keep the active row visible inside the scrollable TOC list.
+    function setActive(id) {
+      activeId = id;
+      const curIdx = headingEls.findIndex(el => el.id === id);
+      for (const link of links) {
+        const idx = headingEls.findIndex(el => el.id === link.dataset.tocLink);
+        if (idx === curIdx) {
+          link.setAttribute("data-active", "");
+          link.removeAttribute("data-passed");
+        } else if (idx < curIdx) {
+          link.removeAttribute("data-active");
+          link.setAttribute("data-passed", "");
+        } else {
+          link.removeAttribute("data-active");
+          link.removeAttribute("data-passed");
+        }
+      }
+      // `block: "nearest"` only scrolls the TOC list when the active row is
+      // outside it — the fixed nav never triggers page scrolling.
+      links
+        .find(link => link.dataset.tocLink === id)
+        ?.scrollIntoView({ block: "nearest" });
+    }
+
     function update() {
       ticking = false;
 
       // The section closest to (but above) the reading line wins.
+      // 120px matches the anchor landing spot (scroll-padding 6rem +
+      // heading scroll-margin 1rem = 112px), so a TOC jump keeps the
+      // clicked entry highlighted.
       const readingLine = 120;
       let current = headingEls[0].id;
       for (const el of headingEls) {
@@ -297,25 +325,17 @@ const items = tocItems.map(h => {
       }
 
       if (current === activeId) return;
-      activeId = current;
+      setActive(current);
+    }
 
-      // Segmented progress: mark current as active, sections above as passed.
-      for (const link of links) {
-        const idx = headingEls.findIndex(
-          el => el.id === link.dataset.tocLink
-        );
-        const curIdx = headingEls.findIndex(el => el.id === current);
-        if (idx === curIdx) {
-          link.setAttribute("data-active", "");
-          link.removeAttribute("data-passed");
-        } else if (idx < curIdx) {
-          link.removeAttribute("data-active");
-          link.setAttribute("data-passed", "");
-        } else {
-          link.removeAttribute("data-active");
-          link.removeAttribute("data-passed");
-        }
-      }
+    // Clicking a TOC entry: highlight it right away (don't wait for the
+    // smooth scroll to finish) and collapse the mobile TOC afterwards.
+    for (const link of links) {
+      link.addEventListener("click", () => {
+        setActive(link.dataset.tocLink);
+        const details = link.closest("details");
+        if (details) details.removeAttribute("open");
+      });
     }
 
     document.addEventListener(
@@ -332,5 +352,14 @@ const items = tocItems.map(h => {
     update();
   }
 
-  initTocScrollSpy();
+  // This component renders BEFORE the <article> in the DOM, so heading
+  // elements don't exist yet when the inline script executes during parse.
+  // Wait for the DOM to be ready before wiring up the scrollspy.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initTocScrollSpy, {
+      once: true,
+    });
+  } else {
+    initTocScrollSpy();
+  }
 </script>

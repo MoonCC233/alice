@@ -22,6 +22,10 @@ export default {
     editPage: "Edit page",
     previousPost: "Previous Post",
     nextPost: "Next Post",
+    info: "About this post",
+    wordCount: "Words",
+    readingTimeLabel: "Reading time",
+    readingTime: "~{{min}} min",
   },
   pagination: {
     prev: "Prev",

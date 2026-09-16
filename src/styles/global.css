@@ -121,11 +121,10 @@ main#main-content {
   margin-top: 5.5rem;
 }
 
-/* Keep anchored headings clear of the floating header. */
+/* Extra breathing room under the header for anchored headings.
+   html's scroll-padding-top (6rem) already clears the header — this small
+   margin is additive, so the heading lands at 7rem, just above the
+   scrollspy reading line (120px), keeping the active TOC item correct. */
 #article :is(h2, h3, h4, h5, h6) {
-  scroll-margin-block-start: 6rem;
-}
-
-:target {
-  scroll-margin-block: 1rem;
+  scroll-margin-block-start: 1rem;
 }

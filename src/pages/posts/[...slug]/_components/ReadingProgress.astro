@@ -1,0 +1,131 @@
+---
+---
+
+<div
+  id="reading-progress"
+  class="border-border bg-background/80 fixed bottom-6 left-4 z-40 flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-medium shadow-lg backdrop-blur-md transition-[opacity,transform] duration-300 sm:left-6"
+  role="status"
+  aria-live="polite"
+>
+  <span
+    aria-hidden="true"
+    class="relative inline-flex size-4 items-center justify-center"
+  >
+    <svg viewBox="0 0 16 16" class="size-4 -rotate-90">
+      <circle
+        cx="8"
+        cy="8"
+        r="6.5"
+        fill="none"
+        class="stroke-border"
+        stroke-width="2"></circle>
+      <circle
+        id="rp-ring-fill"
+        cx="8"
+        cy="8"
+        r="6.5"
+        fill="none"
+        pathLength="100"
+        class="stroke-accent"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-dasharray="100"
+        stroke-dashoffset="100"></circle>
+    </svg>
+  </span>
+  <span id="rp-text" class="text-muted-foreground tabular-nums whitespace-nowrap"
+  ></span>
+</div>
+
+<style>
+  #reading-progress {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    pointer-events: none;
+  }
+
+  #reading-progress[data-visible] {
+    opacity: 1;
+    transform: none;
+  }
+
+  #rp-ring-fill {
+    transition: stroke-dashoffset 0.15s linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #reading-progress {
+      transition: none;
+    }
+
+    #rp-ring-fill {
+      transition: none;
+    }
+  }
+</style>
+
+<script is:inline data-astro-rerun>
+  function initReadingProgress() {
+    const pill = document.getElementById("reading-progress");
+    const article = document.getElementById("article");
+    const text = document.getElementById("rp-text");
+    const ringFill = document.getElementById("rp-ring-fill");
+    if (!pill || !article || !text || !ringFill) return;
+
+    let visible = false;
+    let lastPct = -1;
+    let ticking = false;
+
+    function update() {
+      ticking = false;
+      const rect = article.getBoundingClientRect();
+      const viewportH = window.innerHeight;
+
+      // Article progress: linear from "article top enters the viewport" (0)
+      // to "article fully scrolled past" (1).
+      const total = rect.height + viewportH;
+      const progress = Math.min(
+        1,
+        Math.max(0, (viewportH - rect.top) / Math.max(1, total))
+      );
+
+      // Visible only while reading: hidden off-screen, once the article is
+      // fully read, or at the very bottom of the page — no "done" message,
+      // the pill just quietly goes away.
+      const atPageBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 4;
+      const onScreen =
+        rect.bottom > 0 &&
+        rect.top < viewportH &&
+        progress < 0.999 &&
+        !atPageBottom;
+      if (onScreen !== visible) {
+        visible = onScreen;
+        pill.toggleAttribute("data-visible", visible);
+      }
+      if (!visible) return;
+
+      const pct = Math.round(progress * 100);
+      if (pct === lastPct) return;
+      lastPct = pct;
+      text.textContent = `${pct}%`;
+      ringFill.style.strokeDashoffset = String(100 - pct);
+    }
+
+    document.addEventListener(
+      "scroll",
+      () => {
+        if (!ticking) {
+          window.requestAnimationFrame(update);
+          ticking = true;
+        }
+      },
+      { passive: true }
+    );
+
+    update();
+  }
+
+  initReadingProgress();
+</script>

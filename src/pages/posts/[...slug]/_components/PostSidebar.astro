@@ -1,0 +1,97 @@
+---
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import { useTranslations } from "@/i18n";
+import { countWords } from "@/utils/getReadingTime";
+import { tplStr } from "@/i18n";
+import config from "@/config";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+type Props = {
+  body: string | undefined;
+  totalMin: number;
+  pubDatetime: string | Date;
+  modDatetime?: string | Date | null;
+  timezone?: string;
+};
+
+const { body, totalMin, pubDatetime, modDatetime, timezone: postTimezone } =
+  Astro.props;
+
+const t = useTranslations(Astro.currentLocale);
+
+const isModified = modDatetime && modDatetime > pubDatetime;
+
+const tz = postTimezone ?? config.site.timezone;
+const pubDate = dayjs(pubDatetime).tz(tz);
+const modDate = isModified ? dayjs(modDatetime).tz(tz) : null;
+
+const wordCount = countWords(body);
+---
+
+{/* Desktop-only info sidebar, mirroring the TOC position on the right */}
+<aside
+  class="animate-meta-in fixed top-28 z-30 hidden w-56 xl:block 2xl:w-64"
+  style={{ right: "calc(50% + 26rem)" }}
+>
+  <p class="text-muted-foreground mb-2 text-xs font-semibold tracking-widest uppercase">
+    {t.post.info}
+  </p>
+
+  <dl
+    class="bg-background/60 space-y-3 rounded-2xl p-4 text-sm backdrop-blur-sm"
+  >
+    <div class="flex items-baseline justify-between gap-2">
+      <dt class="text-muted-foreground flex-none">{t.post.publishedAt}</dt>
+      <dd class="whitespace-nowrap">{pubDate.format("YYYY-MM-DD")}</dd>
+    </div>
+    {
+      modDate && (
+        <div class="flex items-baseline justify-between gap-2">
+          <dt class="text-muted-foreground flex-none">{t.post.updatedAt}</dt>
+          <dd class="whitespace-nowrap">{modDate.format("YYYY-MM-DD")}</dd>
+        </div>
+      )
+    }
+    <div class="flex items-baseline justify-between gap-2">
+      <dt class="text-muted-foreground flex-none">{t.post.wordCount}</dt>
+      <dd class="tabular-nums">{wordCount.toLocaleString()}</dd>
+    </div>
+    <div class="flex items-baseline justify-between gap-2">
+      <dt class="text-muted-foreground flex-none">{t.post.readingTimeLabel}</dt>
+      <dd
+        class="text-accent tabular-nums whitespace-nowrap"
+      >
+        {tplStr(t.post.readingTime, { min: totalMin })}
+      </dd>
+    </div>
+  </dl>
+
+</aside>
+
+<style>
+  /* Entrance animation, same curve as the TOC on the right */
+  @keyframes meta-in {
+    from {
+      opacity: 0;
+      transform: translateX(-0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .animate-meta-in {
+    animation: meta-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-meta-in {
+      animation: none;
+    }
+  }
+</style>

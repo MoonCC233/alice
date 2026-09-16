@@ -20,6 +20,10 @@ export interface UIStrings {
     editPage: string;
     previousPost: string;
     nextPost: string;
+    info: string;
+    wordCount: string;
+    readingTimeLabel: string;
+    readingTime: string;
   };
   pagination: {
     prev: string;

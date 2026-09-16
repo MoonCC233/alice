@@ -15,7 +15,10 @@ import BackButton from "./_components/BackButton.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
 import Toc from "./_components/Toc.astro";
+import ReadingProgress from "./_components/ReadingProgress.astro";
+import PostSidebar from "./_components/PostSidebar.astro";
 import { useTranslations } from "@/i18n";
+import { estimateReadingMinutes } from "@/utils/getReadingTime";
 import config from "@/config";
 
 export async function getStaticPaths() {
@@ -76,6 +79,8 @@ const {
 } = post.data;
 
 const { Content, headings } = await render(post);
+
+const totalMin = estimateReadingMinutes(post.body);
 ---
 
 <PostLayout
@@ -117,6 +122,14 @@ const { Content, headings } = await render(post);
 
     <Toc headings={headings} />
 
+    <PostSidebar
+      body={post.body}
+      totalMin={totalMin}
+      {pubDatetime}
+      {modDatetime}
+      {timezone}
+    />
+
     <article
       id="article"
       class:list={[
@@ -138,6 +151,8 @@ const { Content, headings } = await render(post);
     <EditPost class="sm:hidden" {hideEditPost} {post} />
 
     <BackToTopButton />
+
+    <ReadingProgress totalMin={totalMin} />
 
     <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
       {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
