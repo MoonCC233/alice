@@ -8,6 +8,7 @@ export default {
     about: "关于",
     archives: "归档",
     search: "搜索",
+    links: "友链",
   },
   post: {
     publishedAt: "发布于",
@@ -90,6 +91,11 @@ export default {
 
     searchTitle: "搜索",
     searchDesc: "搜索任何文章 ...",
+
+    linksTitle: "友链",
+    linksDesc: "我的朋友们，排名不分先后。",
+    linksApply: "想交换友链？欢迎通过",
+    linksApplyTail: "页与我联系。",
   },
   a11y: {
     skipToContent: "跳转到内容",

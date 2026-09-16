@@ -8,6 +8,7 @@ export default {
     about: "About",
     archives: "Archives",
     search: "Search",
+    links: "Links",
   },
   post: {
     publishedAt: "Published at",
@@ -90,6 +91,11 @@ export default {
 
     searchTitle: "Search",
     searchDesc: "Search any article ...",
+
+    linksTitle: "Links",
+    linksDesc: "My friends, in no particular order.",
+    linksApply: "Want to exchange links? Reach me via the",
+    linksApplyTail: "page.",
   },
   a11y: {
     skipToContent: "Skip to content",

@@ -1,0 +1,234 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Footer from "@/components/Footer.astro";
+import Main from "@/components/Main.astro";
+import { useTranslations } from "@/i18n";
+import config from "@/config";
+import { friends } from "@/data/friends";
+
+const t = useTranslations(Astro.currentLocale);
+const locale = Astro.currentLocale ?? config.site.lang;
+
+// 左侧展示区数据：默认展示第一位友链，悬浮右侧卡片时切换
+const featured = friends[0];
+
+const domainOf = (url: string) => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+};
+
+// 首页截图：优先使用手动指定的 screenshot，否则用 mShots 按 URL 自动生成
+const screenshotOf = (friend: (typeof friends)[number]) =>
+  friend.screenshot ??
+  `https://s.wordpress.com/mshots/v1/${encodeURIComponent(friend.url)}?w=640&h=400`;
+
+// 根据站名生成稳定的渐变色（截图加载失败时作为占位背景）
+const gradientOf = (name: string) => {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return `linear-gradient(135deg, hsl(${h} 65% 55%), hsl(${(h + 45) % 360} 60% 42%))`;
+};
+---
+
+<Layout title={`${t.pages.linksTitle} | ${config.site.title}`} description={t.pages.linksDesc}>
+  <Header />
+
+  <Breadcrumb />
+
+  <Main pageTitle={t.pages.linksTitle} pageDesc={t.pages.linksDesc}>
+
+    <div class="grid gap-10 lg:grid-cols-[280px_1fr]">
+      {/* 左侧展示区（无边框）：头像 + 网站信息 / 下方首页截图 */}
+      <div id="friend-preview" class="space-y-5 self-start lg:sticky lg:top-24">
+        <div class="flex items-center gap-4">
+          <img
+            id="fp-avatar-img"
+            src={featured.avatar}
+            alt={featured.name}
+            width="64"
+            height="64"
+            class:list={["size-16 flex-none rounded-2xl object-cover", { hidden: !featured.avatar }]}
+          />
+          <span
+            id="fp-avatar-initial"
+            class:list={[
+              "grid size-16 flex-none place-items-center rounded-2xl text-2xl font-bold text-white",
+              { hidden: !!featured.avatar },
+            ]}
+            style={`background:${gradientOf(featured.name)}`}
+            aria-hidden="true"
+          >
+            {featured.name.charAt(0).toUpperCase()}
+          </span>
+          <div class="min-w-0">
+            <p id="fp-name" class="text-accent truncate text-lg font-bold">
+              {featured.name}
+            </p>
+            <p
+              id="fp-domain"
+              class="text-muted-foreground mt-0.5 truncate text-xs tabular-nums"
+            >
+              {domainOf(featured.url)}
+            </p>
+          </div>
+        </div>
+
+        {/* 首页截图（缓慢 Ken Burns 动画） */}
+        <span class="bg-muted relative block aspect-[16/10] overflow-hidden rounded-2xl shadow-sm">
+          <span
+            id="fp-placeholder"
+            class="absolute inset-0 grid place-items-center text-3xl font-bold text-white/80 select-none"
+            style={`background:${gradientOf(featured.name)}`}
+            aria-hidden="true"
+          >
+            {featured.name.charAt(0).toUpperCase()}
+          </span>
+          <img
+            id="fp-shot"
+            src={screenshotOf(featured)}
+            alt={`${featured.name} 首页截图`}
+            width="640"
+            height="400"
+            class="kenburns relative size-full object-cover"
+            onerror="this.remove()"
+          />
+        </span>
+      </div>
+
+      {/* 友链列表：自适应列数，无边框卡片 */}
+      <ul class="grid content-start gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+        {
+          friends.map(friend => {
+            const initial = friend.name.charAt(0).toUpperCase();
+            return (
+              <li>
+                <a
+                  href={friend.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-friend
+                  data-name={friend.name}
+                  data-domain={domainOf(friend.url)}
+                  data-initial={initial}
+                  data-gradient={gradientOf(friend.name)}
+                  data-shot={screenshotOf(friend)}
+                  data-avatar={friend.avatar ?? ""}
+                  class="group bg-muted/40 hover:bg-accent/10 relative flex h-full items-center gap-3.5 overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  {/* 在线状态点（装饰） */}
+                  <span
+                    class="absolute top-3 right-3 size-1.5 rounded-full bg-emerald-400"
+                    aria-hidden="true"
+                  />
+
+                  {friend.avatar ? (
+                    <img
+                      src={friend.avatar}
+                      alt={friend.name}
+                      width="48"
+                      height="48"
+                      loading="lazy"
+                      class="size-12 flex-none rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <span class="bg-background text-muted-foreground grid size-12 flex-none place-items-center rounded-xl text-lg font-semibold transition-transform duration-300 group-hover:scale-105">
+                      {initial}
+                    </span>
+                  )}
+
+                  <span class="min-w-0 flex-1">
+                    <span class="text-foreground group-hover:text-accent block truncate text-sm font-semibold transition-colors">
+                      {friend.name}
+                    </span>
+                    <span class="text-muted-foreground block truncate text-[11px] tabular-nums">
+                      {domainOf(friend.url)}
+                    </span>
+                    <span class="text-muted-foreground mt-1 block truncate text-xs">
+                      {friend.desc}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+
+    <p class="text-muted-foreground mt-10 text-sm">
+      {t.pages.linksApply}
+      <a
+        href={getRelativeLocaleUrl(locale, "about")}
+        class="text-accent hover:underline"
+      >
+        {t.nav.about}
+      </a>
+      {t.pages.linksApplyTail}
+    </p>
+  </Main>
+</Layout>
+
+<script>
+  // 悬浮右侧友链卡片时，切换左侧展示区信息（带淡入动画）。
+  // 注意：脚本立即执行（模块脚本是 deferred，此时 DOM 已就绪），
+  // 不依赖 astro:page-load —— 该事件在本站不会触发。
+  function initFriendPreview() {
+    const panel = document.getElementById("friend-preview");
+    if (!panel || panel.dataset.previewBound === "true") return;
+
+    const name = document.getElementById("fp-name");
+    const domain = document.getElementById("fp-domain");
+    const avatarImg = document.getElementById(
+      "fp-avatar-img",
+    ) as HTMLImageElement | null;
+    const avatarInitial = document.getElementById("fp-avatar-initial");
+    const placeholder = document.getElementById("fp-placeholder");
+    const shot = document.getElementById("fp-shot") as HTMLImageElement | null;
+    if (!name || !domain || !avatarImg || !avatarInitial || !placeholder || !shot) {
+      return;
+    }
+    panel.dataset.previewBound = "true";
+
+    const apply = (card: HTMLElement) => {
+      const d = card.dataset;
+      if (!d.name) return;
+      name.textContent = d.name;
+      domain.textContent = d.domain ?? "";
+
+      if (d.avatar) {
+        avatarImg.src = d.avatar;
+        avatarImg.classList.remove("hidden");
+        avatarInitial.classList.add("hidden");
+      } else {
+        avatarInitial.textContent = d.initial ?? "";
+        avatarInitial.style.background = d.gradient ?? "";
+        avatarImg.classList.add("hidden");
+        avatarInitial.classList.remove("hidden");
+      }
+
+      placeholder.style.background = d.gradient ?? "";
+      placeholder.textContent = d.initial ?? "";
+      shot.src = d.shot ?? "";
+
+      // 切换淡入动画
+      panel.animate?.(
+        [{ opacity: 0.35 }, { opacity: 1 }],
+        { duration: 260, easing: "ease-out" },
+      );
+    };
+
+    document.querySelectorAll<HTMLElement>("[data-friend]").forEach(card => {
+      card.addEventListener("mouseenter", () => apply(card));
+      card.addEventListener("focus", () => apply(card));
+    });
+  }
+  initFriendPreview();
+  document.addEventListener("astro:after-swap", initFriendPreview);
+</script>
+

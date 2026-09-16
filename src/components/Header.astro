@@ -8,6 +8,7 @@ import IconHome from "@/assets/icons/IconHome.svg";
 import IconFileText from "@/assets/icons/IconFileText.svg";
 import IconHash from "@/assets/icons/IconHash.svg";
 import IconUser from "@/assets/icons/IconUser.svg";
+import IconLink from "@/assets/icons/IconLink.svg";
 import IconX from "@/assets/icons/IconX.svg";
 import Logo from "@/assets/icons/Logo.svg";
 import { stripBase, stripLocale } from "@/utils/withBase";
@@ -160,6 +161,17 @@ const island =
               {t.nav.about}
             </a>
           </li>
+          <li>
+            <a
+              href={getRelativeLocaleUrl(locale, "links")}
+              class:list={[navItem]}
+              data-nav-path="/links"
+              data-active={isActive("/links") ? "true" : "false"}
+            >
+              <IconLink class="nav-icon size-4" aria-hidden="true" />
+              {t.nav.links}
+            </a>
+          </li>
         </ul>
       </nav>
 
@@ -264,6 +276,18 @@ const island =
         data-nav-path="/about"
       >
         {t.nav.about}
+      </a>
+    </li>
+    <li>
+      <a
+        href={getRelativeLocaleUrl(locale, "links")}
+        class:list={[
+          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
+          { "active-nav": isActive("/links") },
+        ]}
+        data-nav-path="/links"
+      >
+        {t.nav.links}
       </a>
     </li>
   </ul>

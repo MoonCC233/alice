@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 - Reading time and word count utilities with CJK-aware counting (zh/en strings)
 - TOC improvements: click-to-highlight, active heading auto-scrolled into view and collapsible on mobile
 - KaTeX math rendering in posts: inline (`$...$`) and display (`$$...$$`) formulas via remark-math + rehype-katex, with horizontally scrollable display math on narrow screens
+- Friends/links page (`/links`): card list driven by a new `src/data/friends.ts` data file, with an apply link and zh/en strings
+- Links entry in the header navigation (desktop and mobile) with a new link icon and active-state highlighting
 
 ### Fixed
 
