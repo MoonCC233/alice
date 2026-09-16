@@ -2,6 +2,7 @@
 @import "./theme.css";
 @import "./typography.css";
 @import "rehype-callouts/theme/obsidian";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
@@ -127,4 +128,12 @@ main#main-content {
    scrollspy reading line (120px), keeping the active TOC item correct. */
 #article :is(h2, h3, h4, h5, h6) {
   scroll-margin-block-start: 1rem;
+}
+
+/* KaTeX math: let long display formulas scroll horizontally on mobile
+   instead of overflowing the article column. */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
 }

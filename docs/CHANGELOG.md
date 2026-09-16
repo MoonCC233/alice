@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Article page reading progress: floating pill with a progress ring and percentage
 - Reading time and word count utilities with CJK-aware counting (zh/en strings)
 - TOC improvements: click-to-highlight, active heading auto-scrolled into view and collapsible on mobile
+- KaTeX math rendering in posts: inline (`$...$`) and display (`$$...$$`) formulas via remark-math + rehype-katex, with horizontally scrollable display math on narrow screens
 
 ### Fixed
 
@@ -23,3 +24,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Redesigned footer into a multi-column layout: brand with site description and socials, site info column with post/tag counts, running days, RSS link and a live clock; theme credit moved to a dedicated bottom bar
+
+### Fixed
+
+- Dark mode prose (including display math) rendering too dark: `.app-prose` now applies `dark:prose-invert` so unstyled children switch to inverted colors
