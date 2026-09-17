@@ -1,8 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import PostLayout from "@/layouts/PostLayout.astro";
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
 import Datetime from "@/components/Datetime.astro";
 import Tag from "@/components/Tag.astro";
 import { getPostSlug } from "@/utils/getPostPaths";
@@ -90,8 +88,6 @@ const totalMin = estimateReadingMinutes(post.body);
   pubDatetime={pubDatetime}
   modDatetime={modDatetime}
 >
-  <Header />
-
   <BackButton />
 
   <main
@@ -164,7 +160,6 @@ const totalMin = estimateReadingMinutes(post.body);
 
     <AdjacentPostNav {prevPost} {nextPost} />
   </main>
-  <Footer />
 </PostLayout>
 
 <script is:inline data-astro-rerun>

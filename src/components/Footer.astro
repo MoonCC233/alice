@@ -6,11 +6,9 @@ import Socials from "./Socials.astro";
 import { useTranslations, tplStr } from "@/i18n";
 import config from "@/config";
 
-type Props = {
-  noMarginTop?: boolean;
-} & HTMLAttributes<"footer">;
+type Props = HTMLAttributes<"footer">;
 
-const { noMarginTop = false, class: className, ...attrs } = Astro.props;
+const { class: className, ...attrs } = Astro.props;
 
 // 主题信息：名称 / 作者 / 相关链接
 const THEME = {
@@ -54,10 +52,7 @@ const datetimeFormatter = new Intl.DateTimeFormat(locale, {
 const initialDatetime = datetimeFormatter.format(now);
 ---
 
-<footer
-  class:list={["app-layout", { "mt-auto": !noMarginTop }, className]}
-  {...attrs}
->
+<footer class:list={["app-layout", className]} {...attrs}>
   <div class="border-border border-t pt-8 pb-6">
     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr] lg:gap-6">
       {/* 品牌栏：站点名 + 简介 + 社交链接 */}

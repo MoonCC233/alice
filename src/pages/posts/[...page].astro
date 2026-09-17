@@ -2,11 +2,8 @@
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
 import Main from "@/components/Main.astro";
 import Card from "@/components/Card.astro";
-import Footer from "@/components/Footer.astro";
 import Pagination from "@/components/Pagination.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
@@ -23,11 +20,7 @@ const locale = Astro.currentLocale ?? config.site.lang;
 const t = useTranslations(locale);
 ---
 
-<Layout title={`${t.pages.postsTitle} | ${config.site.title}`}>
-  <Header />
-
-  <Breadcrumb />
-
+<Layout title={`${t.pages.postsTitle} | ${config.site.title}`} breadcrumb>
   <Main pageTitle={t.pages.postsTitle} pageDesc={t.pages.postsDesc}>
     <ul>
       {page.data.map(data => <Card {...data} />)}
@@ -35,6 +28,4 @@ const t = useTranslations(locale);
   </Main>
 
   <Pagination {page} />
-
-  <Footer noMarginTop={page.lastPage > 1} />
 </Layout>

@@ -1,9 +1,6 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
 import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
-import Footer from "@/components/Footer.astro";
 import Main from "@/components/Main.astro";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
@@ -36,11 +33,11 @@ const gradientOf = (name: string) => {
 };
 ---
 
-<Layout title={`${t.pages.linksTitle} | ${config.site.title}`} description={t.pages.linksDesc}>
-  <Header />
-
-  <Breadcrumb />
-
+<Layout
+  title={`${t.pages.linksTitle} | ${config.site.title}`}
+  description={t.pages.linksDesc}
+  breadcrumb
+>
   <Main pageTitle={t.pages.linksTitle} pageDesc={t.pages.linksDesc}>
 
     <div class="grid gap-10 lg:grid-cols-[280px_1fr]">

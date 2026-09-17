@@ -2,6 +2,9 @@
 
 import { ClientRouter } from "astro:transitions";
 import { getRelativeLocaleUrl } from "astro:i18n";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Footer from "@/components/Footer.astro";
+import Header from "@/components/Header.astro";
 import { getAssetPath } from "@/utils/withBase";
 import config from "@/config";
 import "@/styles/global.css";
@@ -10,6 +13,8 @@ type Props = {
   title?: string;
   description?: string;
   canonicalURL?: string;
+  /** Renders the breadcrumb trail under the header (inner pages only). */
+  breadcrumb?: boolean;
 };
 
 const { site } = config;
@@ -18,6 +23,7 @@ const {
   title = site.title,
   description = site.description,
   canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
+  breadcrumb = false,
 } = Astro.props;
 
 const rssHref = getRelativeLocaleUrl(
@@ -109,7 +115,18 @@ const rssHref = getRelativeLocaleUrl(
   <body
     class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
   >
-    <slot />
+    <Header />
+
+    {breadcrumb && <Breadcrumb />}
+
+    <!-- Grows to fill the viewport so the footer sits at the bottom on short
+         pages; pagination's own mt-auto then lands directly above it. -->
+    <div class="flex flex-1 flex-col">
+      <slot />
+    </div>
+
+    <Footer />
+
     <script>
       import "@/scripts/theme";
     </script>

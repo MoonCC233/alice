@@ -26,7 +26,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Redesigned footer into a multi-column layout: brand with site description and socials, site info column with post/tag counts, running days, RSS link and a live clock; theme credit moved to a dedicated bottom bar
+- Centralised the shared site chrome in `Layout.astro`: pages no longer import and render `Header`/`Footer` themselves, and the breadcrumb is now opt-in via a `breadcrumb` prop. `Footer` loses its `noMarginTop` prop — the layout's content region grows to fill the viewport, so `Pagination`'s own `mt-auto` keeps it directly above the footer
 
 ### Fixed
 
+- Missing footer on the friends/links page: `links.astro` imported `Footer` but never rendered it
 - Dark mode prose (including display math) rendering too dark: `.app-prose` now applies `dark:prose-invert` so unstyled children switch to inverted colors

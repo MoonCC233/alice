@@ -2,10 +2,7 @@
 import { getRelativeLocaleUrl } from "astro:i18n";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
 import Main from "@/components/Main.astro";
-import Footer from "@/components/Footer.astro";
 import Card from "@/components/Card.astro";
 import { postFilter } from "@/utils/postFilter";
 import { getPostsByGroupCondition } from "./_utils/getPostsByGroupCondition";
@@ -27,11 +24,10 @@ const filteredPosts = posts.filter(postFilter);
 const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
 ---
 
-<Layout title={`${t.pages.archivesTitle} | ${config.site.title}`}>
-  <Header />
-
-  <Breadcrumb />
-
+<Layout
+  title={`${t.pages.archivesTitle} | ${config.site.title}`}
+  breadcrumb
+>
   <Main pageTitle={t.pages.archivesTitle} pageDesc={t.pages.archivesDesc}>
     {
       Object.entries(
@@ -84,6 +80,4 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
         ))
     }
   </Main>
-
-  <Footer />
 </Layout>
