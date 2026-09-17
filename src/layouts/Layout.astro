@@ -1,7 +1,6 @@
 ---
 
 import { ClientRouter } from "astro:transitions";
-import { getRelativeLocaleUrl } from "astro:i18n";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import Footer from "@/components/Footer.astro";
 import Header from "@/components/Header.astro";
@@ -26,10 +25,10 @@ const {
   breadcrumb = false,
 } = Astro.props;
 
-const rssHref = getRelativeLocaleUrl(
-  Astro.currentLocale ?? config.site.lang,
-  "rss.xml"
-);
+// rss.xml is a fixed file route, not a directory route — the locale helper
+// would append a trailing slash here and the browser would request
+// /rss.xml/, which 404s.
+const rssHref = getAssetPath("rss.xml");
 ---
 
 <!doctype html>

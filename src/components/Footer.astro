@@ -1,8 +1,8 @@
 ---
 import type { HTMLAttributes } from "astro/types";
 import { getCollection } from "astro:content";
-import { getRelativeLocaleUrl } from "astro:i18n";
 import Socials from "./Socials.astro";
+import { getAssetPath } from "@/utils/withBase";
 import { useTranslations, tplStr } from "@/i18n";
 import config from "@/config";
 
@@ -22,7 +22,6 @@ const { site, hero } = config;
 const t = useTranslations(Astro.currentLocale);
 const locale = Astro.currentLocale ?? site.lang;
 
-const url = (path: string) => getRelativeLocaleUrl(locale, path);
 const now = new Date();
 const currentYear = now.getFullYear();
 
@@ -81,7 +80,7 @@ const initialDatetime = datetimeFormatter.format(now);
           }
           <li>
             <a
-              href={url("rss.xml")}
+              href={getAssetPath("rss.xml")}
               class="hover:text-accent inline-flex items-center gap-1 transition-colors"
             >
               RSS

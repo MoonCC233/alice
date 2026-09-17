@@ -30,5 +30,6 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- RSS 404: the footer link and the `<link rel="alternate">` autodiscovery tag were built with `getRelativeLocaleUrl`, which appends a trailing slash (`/rss.xml/`) and misses the file route. Both now use `getAssetPath`, which keeps `/rss.xml` intact while still honouring `base`
 - Missing footer on the friends/links page: `links.astro` imported `Footer` but never rendered it
 - Dark mode prose (including display math) rendering too dark: `.app-prose` now applies `dark:prose-invert` so unstyled children switch to inverted colors
