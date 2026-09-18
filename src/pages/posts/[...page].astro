@@ -3,7 +3,7 @@ import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Main from "@/components/Main.astro";
-import Card from "@/components/Card.astro";
+import PostList from "@/components/PostList.astro";
 import Pagination from "@/components/Pagination.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
@@ -22,9 +22,7 @@ const t = useTranslations(locale);
 
 <Layout title={`${t.pages.postsTitle} | ${config.site.title}`} breadcrumb>
   <Main pageTitle={t.pages.postsTitle} pageDesc={t.pages.postsDesc}>
-    <ul>
-      {page.data.map(data => <Card {...data} />)}
-    </ul>
+    <PostList posts={page.data} />
   </Main>
 
   <Pagination {page} />

@@ -3,9 +3,9 @@ import { getCollection } from "astro:content";
 import { getRelativeLocaleUrl } from "astro:i18n";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import Layout from "@/layouts/Layout.astro";
-import Card from "@/components/Card.astro";
 import Hero from "@/components/Hero.astro";
 import LinkButton from "@/components/LinkButton.astro";
+import PostList from "@/components/PostList.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
@@ -37,19 +37,10 @@ const homePath = getRelativeLocaleUrl(locale, "");
         </h1>
         <span aria-hidden="true" class="bg-accent/40 h-px flex-1"></span>
       </div>
-      <ul id="post-list" class="relative">
-        <!-- Shared hover highlight: glides from card to card as the cursor
-             moves across the list (driven by the script below) -->
-        <div
-          id="post-list-glow"
-          aria-hidden="true"
-          class="post-list-glow pointer-events-none absolute -inset-x-3 top-0 z-0 rounded-2xl opacity-0 transition-[opacity,transform,height] duration-300 ease-out"
-        >
-        </div>
-        {recentPosts.slice(0, postsConfig.perIndex).map(data => (
-          <Card variant="h3" {...data} />
-        ))}
-      </ul>
+      <PostList
+        posts={recentPosts.slice(0, postsConfig.perIndex)}
+        variant="h3"
+      />
     </section>
 
     <div class="my-8 text-center">
@@ -71,46 +62,3 @@ const homePath = getRelativeLocaleUrl(locale, "");
     }
   });
 </script>
-
-<script>
-  // Post-list hover highlight: a single background element that glides to
-  // whichever card is hovered, so moving between cards feels continuous.
-  function setupPostListGlow() {
-    const list = document.getElementById("post-list");
-    const glow = document.getElementById("post-list-glow");
-    if (!list || !glow || list.dataset.glowBound === "true") return;
-    list.dataset.glowBound = "true";
-
-    // Expand the glow a bit beyond the card box so it fully wraps it
-    // (padding all around), still staying inside the list's own margins.
-    const PAD = 14;
-    const moveTo = (li: HTMLElement) => {
-      // li are static children of the positioned ul, so offsetTop/Height are
-      // already list-relative — no scroll handling needed.
-      glow.style.transform = `translate3d(0, ${li.offsetTop - PAD}px, 0)`;
-      glow.style.height = `${li.offsetHeight + PAD * 2}px`;
-      glow.style.opacity = "1";
-    };
-
-    list.addEventListener("pointerover", e => {
-      const li = (e.target as HTMLElement).closest("li");
-      if (li) moveTo(li);
-    });
-    list.addEventListener("pointerleave", () => {
-      glow.style.opacity = "0";
-    });
-    // Reflow invalidates cached offsets — just hide; it reappears on hover.
-    window.addEventListener("resize", () => {
-      glow.style.opacity = "0";
-    });
-  }
-
-  document.addEventListener("astro:page-load", setupPostListGlow);
-</script>
-
-<style>
-  .post-list-glow {
-    background: color-mix(in oklab, var(--accent) 8%, transparent);
-    will-change: transform, height;
-  }
-</style>
