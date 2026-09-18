@@ -1,7 +1,11 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { getCoverUrl } from "@/utils/getCoverUrl";
 import { getPostUrl } from "@/utils/getPostPaths";
-import { toTransitionName } from "@/utils/toTransitionName";
+import {
+  toTransitionName,
+  toCoverTransitionName,
+} from "@/utils/toTransitionName";
 import Datetime from "./Datetime.astro";
 
 type Props = {
@@ -10,26 +14,58 @@ type Props = {
 
 const { variant: Heading = "h2", id, data, filePath } = Astro.props;
 
-const { title, description, ...props } = data;
+const { title, description, cover, ...props } = data;
+const coverUrl = getCoverUrl(cover);
 ---
 
+<!-- The flex row is an inner div, never the <li>: `display: flex` on an <li>
+     drops its listitem role in Blink and #post-list would lose its semantics. -->
 <li class="group relative my-6">
-  <a
-    href={getPostUrl(id, filePath, Astro.currentLocale)}
-    class:list={[
-      "text-accent inline-block text-lg font-medium",
-      "decoration-dashed underline-offset-4 group-hover:underline",
-      "transition-colors duration-200",
-      "focus-visible:no-underline focus-visible:underline-offset-0",
-    ]}
-  >
-    <Heading
-      transition:name={toTransitionName(id)}
-      class="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-    >
-      {title}
-    </Heading>
-  </a>
-  <Datetime {...props} />
-  <p class="text-muted-foreground mt-1">{description}</p>
+  <div class="flex items-start gap-4">
+    {
+      coverUrl && (
+        <span
+          style={{ viewTransitionName: toCoverTransitionName(id) }}
+          class="bg-muted block aspect-[16/10] w-28 flex-none overflow-hidden rounded-xl sm:w-36"
+        >
+          {/* The name is on this wrapper, not the img: ClientRouter does not
+              wait for images before snapshotting, so a named <img> can capture
+              empty — the wrapper's bg-muted degrades gracefully. It also bakes
+              in the crop and radius. */}
+          <img
+            src={coverUrl}
+            alt=""
+            width="640"
+            height="400"
+            loading="lazy"
+            class="size-full object-cover"
+          />
+        </span>
+      )
+    }
+
+    <!-- items-start above is load-bearing: the default align-self:stretch makes
+         the thumbnail's height definite, which overrides aspect-ratio and
+         deforms the cover whenever the text column is taller than it. -->
+    <div class="min-w-0 flex-1">
+      <a
+        href={getPostUrl(id, filePath, Astro.currentLocale)}
+        class:list={[
+          "text-accent inline-block text-lg font-medium",
+          "decoration-dashed underline-offset-4 group-hover:underline",
+          "transition-colors duration-200",
+          "focus-visible:no-underline focus-visible:underline-offset-0",
+        ]}
+      >
+        <Heading
+          transition:name={toTransitionName(id)}
+          class="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+        >
+          {title}
+        </Heading>
+      </a>
+      <Datetime {...props} />
+      <p class="text-muted-foreground mt-1">{description}</p>
+    </div>
+  </div>
 </li>

@@ -24,3 +24,15 @@ export const toTransitionName = (str: string): string => {
   if (!result) result = "post";
   return result;
 };
+
+/**
+ * View-transition name for a post's cover, so the list thumbnail can morph
+ * into the article hero alongside the title.
+ *
+ * The `--` separator is deliberate: toTransitionName collapses runs of `-`
+ * into one, so a *title* name can never contain `--`. That keeps a post slugged
+ * `foo-cover` from colliding with the cover of a post slugged `foo`, which
+ * would make the browser drop both morphs as duplicates.
+ */
+export const toCoverTransitionName = (str: string): string =>
+  `${toTransitionName(str)}--cover`;

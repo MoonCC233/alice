@@ -21,11 +21,14 @@ All notable changes to this project will be documented in this file.
 - Hero avatar accepts an absolute `http(s)` URL in `hero.avatar`, used as-is instead of being resolved against the public directory. Local filenames still work and still fall back to the theme logo when the file is missing
 - Blog list page (`/posts`) gets the gliding hover highlight previously only on the home page. The list markup, styles and script now live in a shared `PostList.astro` component used by both pages, so the two can no longer drift apart
 - Mobile nav drawer: the hamburger opens a drawer sliding in from the inline-start edge, holding the full nav plus the light/dark toggle as a full-width labelled row. It is a `role="dialog"` with a Tab trap, Escape and backdrop dismissal, and a scroll lock set on the root element; it closes itself on a breakpoint change and before each View Transition so it never rides along to the next page. The theme toggle is now two elements — the desktop island button and the drawer row — bound through a shared `data-theme-toggle` hook
+- Post covers: a new optional `cover` frontmatter field, either a path under `/public` (e.g. `/covers/hello.jpg`) or an absolute `http(s)` URL. It renders as a left thumbnail on every post card (home, post list, tag and archive pages — all via `Card.astro`, so no call-site changes) and as a full-width hero on the article page. A post without a cover renders exactly as before. Covers are not optimised — the full-size file is downloaded — so keep them around ≤640px wide
+- The cover morphs into place on navigation, the same way the post title already does: both ends carry an identical `view-transition-name` (`toCoverTransitionName`), the same `16/10` aspect ratio and the same corner radius, so the browser performs a pure uniform scale plus a translate rather than stretching the image. The name goes on the aspect-ratio wrapper rather than the `<img>`, because ClientRouter takes the new snapshot without waiting for images — a named `<img>` can capture empty, whereas the wrapper's `bg-muted` degrades gracefully and its crop and radius are baked into the snapshot
 
 ### Fixed
 
 - TOC scrollspy not initializing when the article page is loaded directly
 - TOC anchor jump misalignment caused by a doubled scroll offset
+- Reduced-motion users still got the post title's View Transition morph. `prefers-reduced-motion` now also cancels `::view-transition-group`/`-old`/`-new`, which lands the morphed element at its destination immediately. The theme-switch circular reveal is unaffected — it drives its clip-path through the Web Animations API, which a CSS `animation: none` does not touch
 
 ### Changed
 

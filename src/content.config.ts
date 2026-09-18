@@ -17,6 +17,8 @@ const posts = defineCollection({
       draft: z.boolean().optional(),
       tags: z.array(z.string()).default(["others"]),
       description: z.string(),
+      /** Cover image: a path under /public (e.g. "/covers/hello.jpg") or an absolute http(s) URL. */
+      cover: z.string().optional(),
       canonicalURL: z.string().optional(),
       hideEditPost: z.boolean().optional(),
       timezone: z.string().optional(),

@@ -5,8 +5,12 @@ import Datetime from "@/components/Datetime.astro";
 import Tag from "@/components/Tag.astro";
 import { getPostSlug } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
+import { getCoverUrl } from "@/utils/getCoverUrl";
 import { slugifyStr } from "@/utils/slugify";
-import { toTransitionName } from "@/utils/toTransitionName";
+import {
+  toTransitionName,
+  toCoverTransitionName,
+} from "@/utils/toTransitionName";
 import EditPost from "./_components/EditPost.astro";
 import ShareLinks from "./_components/ShareLinks.astro";
 import BackButton from "./_components/BackButton.astro";
@@ -74,7 +78,10 @@ const {
   timezone,
   tags,
   hideEditPost,
+  cover,
 } = post.data;
+
+const coverUrl = getCoverUrl(cover);
 
 const { Content, headings } = await render(post);
 
@@ -115,6 +122,32 @@ const totalMin = estimateReadingMinutes(post.body);
       </span>
       <EditPost {hideEditPost} {post} class="max-sm:hidden" />
     </div>
+
+    <!-- Cover hero. Deliberately outside #article: initLightbox only binds
+         images inside #article, so this is not a click-to-zoom target. -->
+    {
+      coverUrl && (
+        <div
+          style={{ viewTransitionName: toCoverTransitionName(post.id) }}
+          class="bg-muted mt-6 block aspect-[16/10] w-full overflow-hidden rounded-xl"
+        >
+          {/* decoding=sync + fetchpriority=high: Astro does not wait for images
+              before snapshotting the new page, and the list card already fetched
+              this exact URL, so a synchronous cache-hot decode is what makes the
+              morph snapshot contain pixels instead of an empty box. */}
+          <img
+            src={coverUrl}
+            alt=""
+            width="640"
+            height="400"
+            loading="eager"
+            decoding="sync"
+            fetchpriority="high"
+            class="size-full object-cover"
+          />
+        </div>
+      )
+    }
 
     <Toc headings={headings} />
 
@@ -284,7 +317,9 @@ const totalMin = estimateReadingMinutes(post.body);
         image.setAttribute("aria-haspopup", "dialog");
         image.setAttribute(
           "aria-label",
-          image.alt ? `${article?.dataset.zoom ?? "Zoom image"}: ${image.alt}` : (article?.dataset.zoom ?? "Zoom image")
+          image.alt
+            ? `${article?.dataset.zoom ?? "Zoom image"}: ${image.alt}`
+            : (article?.dataset.zoom ?? "Zoom image")
         );
       }
     });
@@ -298,14 +333,19 @@ const totalMin = estimateReadingMinutes(post.body);
       overlay.setAttribute("aria-modal", "true");
       overlay.setAttribute(
         "aria-label",
-        alt ? `${article?.dataset.preview ?? "Image preview"}: ${alt}` : (article?.dataset.preview ?? "Image preview")
+        alt
+          ? `${article?.dataset.preview ?? "Image preview"}: ${alt}`
+          : (article?.dataset.preview ?? "Image preview")
       );
       overlay.className =
         "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
 
       const closeButton = document.createElement("button");
       closeButton.type = "button";
-      closeButton.setAttribute("aria-label", article?.dataset.closePreview ?? "Close image preview");
+      closeButton.setAttribute(
+        "aria-label",
+        article?.dataset.closePreview ?? "Close image preview"
+      );
       closeButton.className =
         "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
       closeButton.innerHTML = "&#10005;";
