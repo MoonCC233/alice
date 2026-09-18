@@ -3,6 +3,7 @@ import type { UIStrings } from "../types";
 export default {
   nav: {
     home: "首页",
+    content: "内容",
     posts: "文章",
     tags: "标签",
     about: "关于",

@@ -10,6 +10,7 @@ import IconHash from "@/assets/icons/IconHash.svg";
 import IconUser from "@/assets/icons/IconUser.svg";
 import IconLink from "@/assets/icons/IconLink.svg";
 import IconX from "@/assets/icons/IconX.svg";
+import IconChevronDown from "@/assets/icons/IconChevronDown.svg";
 import Logo from "@/assets/icons/Logo.svg";
 import { stripBase, stripLocale } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
@@ -43,6 +44,17 @@ const isActive = (path: string) => {
   const pathArray = path.split("/").filter(p => p.trim());
   return currentPath === path || currentPathArray[0] === pathArray[0];
 };
+
+// The "content" nav entry groups posts/tags/archives behind one submenu, so it
+// counts as active when any of its children is the current page. The
+// comma-separated list is the format the client-side resolver already expects.
+const groupPaths = [
+  "/posts",
+  "/tags",
+  ...(features.showArchives ? ["/archives"] : []),
+];
+const groupNavPaths = groupPaths.join(",");
+const isGroupActive = groupPaths.some(isActive);
 
 const navItem =
   "nav-item relative z-10 flex items-center gap-1.5 rounded-full px-4 py-2 text-[15px] leading-none font-semibold whitespace-nowrap transition-[color,transform] duration-200 active:scale-[0.93]";
@@ -113,43 +125,73 @@ const island =
               {t.nav.home}
             </a>
           </li>
-          <li>
-            <a
-              href={getRelativeLocaleUrl(locale, "posts")}
+          <!--
+            Grouped item: a button, not a link, so it never navigates — it only
+            opens the submenu. The <li> must stay static (not `relative`): the
+            sliding indicator measures offsetLeft against the <ul>, and a
+            positioned <li> would re-root offsetParent and pin the pill to x=0.
+            The panel inherits the <ul> as its containing block, so it shares
+            the indicator's coordinate space.
+          -->
+          <li data-nav-group>
+            <button
+              type="button"
               class:list={[navItem]}
-              data-nav-path="/posts"
-              data-active={isActive("/posts") ? "true" : "false"}
+              data-nav-path={groupNavPaths}
+              data-active={isGroupActive ? "true" : "false"}
+              aria-expanded="false"
+              aria-controls="nav-submenu-content"
             >
               <IconFileText class="nav-icon size-4" aria-hidden="true" />
-              {t.nav.posts}
-            </a>
-          </li>
-          <li>
-            <a
-              href={getRelativeLocaleUrl(locale, "tags")}
-              class:list={[navItem]}
-              data-nav-path="/tags"
-              data-active={isActive("/tags") ? "true" : "false"}
+              {t.nav.content}
+              <IconChevronDown class="nav-caret size-3.5" aria-hidden="true" />
+            </button>
+            <ul
+              id="nav-submenu-content"
+              data-nav-submenu
+              class="border-border bg-background/95 absolute z-30 hidden flex-col gap-0.5 rounded-2xl border p-1.5 shadow-lg backdrop-blur-md"
             >
-              <IconHash class="nav-icon size-4" aria-hidden="true" />
-              {t.nav.tags}
-            </a>
-          </li>
-          {
-            features.showArchives && (
               <li>
                 <a
-                  href={getRelativeLocaleUrl(locale, "archives")}
-                  class:list={[navItem]}
-                  data-nav-path="/archives"
-                  data-active={isActive("/archives") ? "true" : "false"}
+                  href={getRelativeLocaleUrl(locale, "posts")}
+                  class="hover:bg-muted/60 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                  data-nav-path="/posts"
+                  aria-current={isActive("/posts") ? "page" : undefined}
                 >
-                  <IconArchive class="nav-icon size-4" aria-hidden="true" />
-                  {t.nav.archives}
+                  <IconFileText class="size-4" aria-hidden="true" />
+                  {t.nav.posts}
                 </a>
               </li>
-            )
-          }
+              <li>
+                <a
+                  href={getRelativeLocaleUrl(locale, "tags")}
+                  class="hover:bg-muted/60 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                  data-nav-path="/tags"
+                  aria-current={isActive("/tags") ? "page" : undefined}
+                >
+                  <IconHash class="size-4" aria-hidden="true" />
+                  {t.nav.tags}
+                </a>
+              </li>
+              {
+                features.showArchives && (
+                  <li>
+                    <a
+                      href={getRelativeLocaleUrl(locale, "archives")}
+                      class="hover:bg-muted/60 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                      data-nav-path="/archives"
+                      aria-current={
+                        isActive("/archives") ? "page" : undefined
+                      }
+                    >
+                      <IconArchive class="size-4" aria-hidden="true" />
+                      {t.nav.archives}
+                    </a>
+                  </li>
+                )
+              }
+            </ul>
+          </li>
           <li>
             <a
               href={getRelativeLocaleUrl(locale, "about")}
@@ -209,10 +251,13 @@ const island =
     </div>
   </div>
 
-  <!-- Mobile: dropdown panel below the island -->
+  <!-- Mobile: dropdown panel below the island.
+       pointer-events-auto is required: the header is pointer-events-none and
+       this panel is its direct child, so without it the whole menu is
+       unclickable (pointer-events is inherited). -->
   <ul
     id="menu-items"
-    class="border-border bg-background/95 animate-menu-in absolute inset-x-4 top-full z-40 mt-2 hidden flex-col gap-1 rounded-3xl border p-3 backdrop-blur-md sm:hidden"
+    class="border-border bg-background/95 animate-menu-in pointer-events-auto absolute inset-x-4 top-full z-40 mt-2 hidden flex-col gap-1 rounded-3xl border p-3 backdrop-blur-md sm:hidden"
   >
     <li>
       <a
@@ -226,46 +271,65 @@ const island =
         {t.nav.home}
       </a>
     </li>
-    <li>
-      <a
-        href={getRelativeLocaleUrl(locale, "posts")}
-        class:list={[
-          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
-          { "active-nav": isActive("/posts") },
-        ]}
-        data-nav-path="/posts"
+    <!-- Grouped like the desktop nav: posts/tags/archives sit in a nested
+         list that collapses under one parent. -->
+    <li data-menu-group>
+      <button
+        type="button"
+        id="menu-group-btn"
+        class="flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-2.5 text-start font-medium transition-colors hover:text-foreground"
+        aria-expanded={isGroupActive ? "true" : "false"}
+        aria-controls="menu-group-items"
       >
-        {t.nav.posts}
-      </a>
-    </li>
-    <li>
-      <a
-        href={getRelativeLocaleUrl(locale, "tags")}
-        class:list={[
-          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
-          { "active-nav": isActive("/tags") },
-        ]}
-        data-nav-path="/tags"
+        {t.nav.content}
+        <IconChevronDown class="nav-caret size-4" aria-hidden="true" />
+      </button>
+      <ul
+        id="menu-group-items"
+        class="border-border ms-3 hidden flex-col gap-1 border-s ps-2"
       >
-        {t.nav.tags}
-      </a>
-    </li>
-    {
-      features.showArchives && (
         <li>
           <a
-            href={getRelativeLocaleUrl(locale, "archives")}
+            href={getRelativeLocaleUrl(locale, "posts")}
             class:list={[
-              "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
-              { "active-nav": isActive("/archives") },
+              "block rounded-2xl px-3 py-2 font-medium transition-colors hover:text-foreground",
+              { "active-nav": isActive("/posts") },
             ]}
-            data-nav-path="/archives"
+            data-nav-path="/posts"
           >
-            {t.nav.archives}
+            {t.nav.posts}
           </a>
         </li>
-      )
-    }
+        <li>
+          <a
+            href={getRelativeLocaleUrl(locale, "tags")}
+            class:list={[
+              "block rounded-2xl px-3 py-2 font-medium transition-colors hover:text-foreground",
+              { "active-nav": isActive("/tags") },
+            ]}
+            data-nav-path="/tags"
+          >
+            {t.nav.tags}
+          </a>
+        </li>
+        {
+          features.showArchives && (
+            <li>
+              <a
+                href={getRelativeLocaleUrl(locale, "archives")}
+                class:list={[
+                  "block rounded-2xl px-3 py-2 font-medium transition-colors hover:text-foreground",
+                  { "active-nav": isActive("/archives") },
+                ]}
+                data-nav-path="/archives"
+              >
+                {t.nav.archives}
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </li>
     <li>
       <a
         href={getRelativeLocaleUrl(locale, "about")}
@@ -327,6 +391,27 @@ const island =
 
   .nav-item:active .nav-icon {
     transform: scale(0.72) rotate(-8deg);
+  }
+
+  /* Desktop submenu panel. Its containing block is the nav <ul>, which is the
+     same origin the indicator already measures offsetLeft against, so JS sets
+     `left` in that space. Centring is done with arithmetic rather than
+     translateX(-50%) because animate-menu-in owns `transform` on this element
+     and would clobber it. The 1.25rem lands the panel 8px below the pill —
+     the <ul> box stops 12px short of the pill's bottom edge, and 8px matches
+     the mobile menu's own gap. */
+  [data-nav-submenu] {
+    top: calc(100% + 1.25rem);
+  }
+
+  /* Caret points down and flips when the group is open. It deliberately is
+     not `.nav-icon`, whose :active squash (above) fights the flip. */
+  .nav-caret {
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [aria-expanded="true"] .nav-caret {
+    transform: rotate(180deg);
   }
 
   /* Click pop: the dark indicator bounces once when an item is clicked. */
@@ -408,6 +493,12 @@ const island =
       transform: none;
     }
 
+    /* The caret keeps its flipped state — it signals whether the submenu is
+       open — but snaps instead of rotating. */
+    .nav-caret {
+      transition: none;
+    }
+
     #nav-indicator.indicator-pop {
       animation: none;
     }
@@ -473,34 +564,59 @@ const island =
           el.classList.toggle("active-nav", active);
         }
 
-        // Announced as the current page instead of a plain link, which is what
-        // makes an inert item acceptable to assistive tech.
-        if (active) el.setAttribute("aria-current", "page");
+        // Only real links get the current-page marking. The grouped item is a
+        // <button> that merely *contains* the current page, so the matching
+        // link inside its submenu carries it instead.
+        if (active && el.tagName === "A")
+          el.setAttribute("aria-current", "page");
         else el.removeAttribute("aria-current");
       });
 
     // Glide the indicator onto the (visible) active nav item.
     const nav = document.getElementById("site-nav");
+    if (!nav) return;
+
+    const items = [...nav.querySelectorAll<HTMLElement>(".nav-item")];
+    if (items.length === 0) return;
+    const visible = items.filter(item => item.offsetParent !== null);
+    const pool = visible.length > 0 ? visible : items;
+    const target =
+      pool.find(item => item.getAttribute("data-active") === "true") ?? pool[0];
+    if (target) moveIndicator(target);
+
+    positionNavSubmenus();
+  }
+
+  // Glide the indicator pill onto a nav item and invert its text.
+  function moveIndicator(item: HTMLElement) {
+    const nav = document.getElementById("site-nav");
     const indicator = document.getElementById("nav-indicator");
     if (!nav || !indicator) return;
 
-    const links = [
-      ...nav.querySelectorAll<HTMLAnchorElement>(".nav-item"),
-    ];
-    if (links.length === 0) return;
-    const visible = links.filter(link => link.offsetParent !== null);
-    const pool = visible.length > 0 ? visible : links;
-    const target =
-      pool.find(link => link.getAttribute("data-active") === "true") ??
-      pool[0];
-    if (target) {
-      const x = `${target.offsetLeft}px`;
-      // Keep the custom property in sync so the pop keyframe can reuse it.
-      indicator.style.setProperty("--indicator-x", x);
-      indicator.style.width = `${target.offsetWidth}px`;
-      indicator.style.transform = `translateX(${x})`;
-      links.forEach(l => l.classList.toggle("nav-inverted", l === target));
-    }
+    const x = `${item.offsetLeft}px`;
+    // Keep the custom property in sync so the pop keyframe can reuse it.
+    indicator.style.setProperty("--indicator-x", x);
+    indicator.style.width = `${item.offsetWidth}px`;
+    indicator.style.transform = `translateX(${x})`;
+    nav
+      .querySelectorAll<HTMLElement>(".nav-item")
+      .forEach(l => l.classList.toggle("nav-inverted", l === item));
+  }
+
+  // Centre each submenu under its group button. The button and the panel both
+  // resolve against the nav <ul>, so offsetLeft/offsetWidth and the panel's
+  // `left` already share a coordinate space. A closed panel is display:none and
+  // reports width 0, so this only has an effect once it is open.
+  function positionNavSubmenus() {
+    document
+      .querySelectorAll<HTMLElement>("[data-nav-group]")
+      .forEach(group => {
+        const button = group.querySelector<HTMLElement>(".nav-item");
+        const panel = group.querySelector<HTMLElement>("[data-nav-submenu]");
+        if (!button || !panel) return;
+        const centre = button.offsetLeft + button.offsetWidth / 2;
+        panel.style.left = `${centre - panel.offsetWidth / 2}px`;
+      });
   }
 
   // The nav item for the page you are already on keeps its <a> markup, hover
@@ -535,6 +651,16 @@ const island =
     const menuIcon = document.querySelector("#menu-icon");
     const closeIcon = document.querySelector("#close-icon");
 
+    const groupBtn = document.querySelector<HTMLButtonElement>(
+      "#menu-group-btn"
+    );
+    if (groupBtn && groupBtn.dataset.bound !== "true") {
+      groupBtn.dataset.bound = "true";
+      groupBtn.addEventListener("click", () =>
+        toggleMenuGroup(groupBtn.getAttribute("aria-expanded") !== "true")
+      );
+    }
+
     if (!menuBtn || !menuItems || !menuIcon || !closeIcon) return;
     if (menuBtn.dataset.bound === "true") return;
     menuBtn.dataset.bound = "true";
@@ -554,10 +680,36 @@ const island =
       menuItems.classList.toggle("animate-menu-in", !openMenu);
       menuIcon.classList.toggle("hidden", !openMenu);
       closeIcon.classList.toggle("hidden", openMenu);
+
+      // On the way in, reveal the group if the current page is inside it —
+      // otherwise the page you are on stays hidden behind a collapsed parent.
+      // Done here, on the user's own action, rather than in updateHeaderActive
+      // (which also runs on resize and would fight a manual collapse).
+      if (!openMenu && menuGroupHasActivePage()) toggleMenuGroup(true);
     });
   }
 
-  // Close the mobile menu (e.g. after navigating with it open).
+  function menuGroupHasActivePage() {
+    return !!document.querySelector(
+      "#menu-group-items [data-nav-path].active-nav"
+    );
+  }
+
+  function toggleMenuGroup(open: boolean) {
+    const groupBtn = document.querySelector<HTMLButtonElement>(
+      "#menu-group-btn"
+    );
+    const groupItems = document.querySelector("#menu-group-items");
+    if (!groupBtn || !groupItems) return;
+
+    groupBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    groupItems.classList.toggle("hidden", !open);
+    groupItems.classList.toggle("flex", open);
+    groupItems.classList.toggle("animate-menu-in", open);
+  }
+
+  // Close the mobile menu (e.g. after navigating with it open). The group
+  // collapses with it, so reopening always starts from a known state.
   function closeMenus() {
     const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
     const menuItems = document.querySelector("#menu-items");
@@ -571,6 +723,124 @@ const island =
       menuIcon.classList.remove("hidden");
       closeIcon.classList.add("hidden");
     }
+
+    toggleMenuGroup(false);
+  }
+
+  // How long the submenu lingers after the pointer leaves the group, so it can
+  // be crossed from the button down to the panel without snapping shut.
+  const GROUP_CLOSE_DELAY = 150;
+
+  // Grouped nav item: hover, click, Escape and focus handling for its submenu.
+  // Bound inside setupNavIndicator's nav-level guard, since the header persists.
+  function setupNavGroups(nav: HTMLElement) {
+    nav.querySelectorAll<HTMLElement>("[data-nav-group]").forEach(group => {
+      if (group.dataset.bound === "true") return;
+      group.dataset.bound = "true";
+
+      const button = group.querySelector<HTMLButtonElement>(".nav-item");
+      const panel = group.querySelector<HTMLElement>("[data-nav-submenu]");
+      if (!button || !panel) return;
+
+      let closeTimer = 0;
+      // A pointer that has hovered the group open is already looking at the
+      // panel, so its click must not toggle that away — it would mean every
+      // mouse click closed what the hover had just revealed.
+      let openedByHover = false;
+
+      const isOpen = () => button.getAttribute("aria-expanded") === "true";
+
+      const open = (byHover = false) => {
+        window.clearTimeout(closeTimer);
+        if (isOpen()) return;
+        openedByHover = byHover;
+        button.setAttribute("aria-expanded", "true");
+        panel.classList.remove("hidden");
+        panel.classList.add("flex", "animate-menu-in");
+        moveIndicator(button);
+        positionNavSubmenus();
+      };
+
+      const close = () => {
+        window.clearTimeout(closeTimer);
+        if (!isOpen()) return;
+        openedByHover = false;
+        button.setAttribute("aria-expanded", "false");
+        panel.classList.add("hidden");
+        panel.classList.remove("flex", "animate-menu-in");
+        updateHeaderActive();
+      };
+
+      const closeSoon = () => {
+        window.clearTimeout(closeTimer);
+        closeTimer = window.setTimeout(close, GROUP_CLOSE_DELAY);
+      };
+
+      // Only a real mouse hovers. Touch pointers would otherwise open the panel
+      // on tap and then close it again when pointerleave fires as the finger
+      // lifts — they toggle through the click handler instead.
+      group.addEventListener("pointerenter", e => {
+        if (e.pointerType === "mouse") open(true);
+      });
+      group.addEventListener("pointerleave", e => {
+        if (e.pointerType === "mouse") closeSoon();
+      });
+
+      button.addEventListener("click", () => {
+        if (openedByHover) return;
+        if (isOpen()) close();
+        else open();
+      });
+
+      group.addEventListener("keydown", e => {
+        if (e.key !== "Escape" || !isOpen()) return;
+        close();
+        button.focus();
+      });
+
+      // Tabbing into the panel keeps the group open; leaving it closes. The
+      // read is deferred because focusout fires before focus lands.
+      group.addEventListener("focusout", () => {
+        requestAnimationFrame(() => {
+          if (!group.contains(document.activeElement)) close();
+        });
+      });
+
+      // Any panel click closes the group: a link that navigates is finished
+      // with it, and a link to the current page (whose navigation
+      // guardNavClicks blocks) at least gets the collapse as feedback.
+      panel.addEventListener("click", close);
+    });
+  }
+
+  // Collapse the desktop submenus. Wired to clicks outside the nav and to
+  // view-transition swaps, which would otherwise leave an open panel on screen
+  // because the header node is persisted.
+  function closeNavGroups() {
+    document
+      .querySelectorAll<HTMLElement>("[data-nav-group]")
+      .forEach(group => {
+        const button = group.querySelector<HTMLElement>(".nav-item");
+        const panel = group.querySelector<HTMLElement>("[data-nav-submenu]");
+        if (!button || !panel) return;
+        button.setAttribute("aria-expanded", "false");
+        panel.classList.add("hidden");
+        panel.classList.remove("flex", "animate-menu-in");
+      });
+  }
+
+  // Clicking anywhere outside a group closes it. Bound to the persisted header
+  // rather than `document`, which would re-register a listener on every swap.
+  function setupHeaderDismiss() {
+    const header = document.getElementById("site-header");
+    if (!header || header.dataset.dismissBound === "true") return;
+    header.dataset.dismissBound = "true";
+
+    header.addEventListener("click", e => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[data-nav-group]")) return;
+      closeNavGroups();
+    });
   }
 
   // Sliding nav indicator: a dark pill that glides to the hovered item
@@ -583,22 +853,10 @@ const island =
     if (nav.dataset.bound !== "true") {
       nav.dataset.bound = "true";
 
-      const links = [
-        ...nav.querySelectorAll<HTMLAnchorElement>(".nav-item"),
-      ];
-
-      const move = (link: HTMLAnchorElement) => {
-        const x = `${link.offsetLeft}px`;
-        indicator.style.setProperty("--indicator-x", x);
-        indicator.style.width = `${link.offsetWidth}px`;
-        indicator.style.transform = `translateX(${x})`;
-        links.forEach(l => l.classList.toggle("nav-inverted", l === link));
-      };
-
-      links.forEach(link => {
-        link.addEventListener("mouseenter", () => move(link));
+      nav.querySelectorAll<HTMLElement>(".nav-item").forEach(item => {
+        item.addEventListener("mouseenter", () => moveIndicator(item));
         // Click pop: replay the indicator bounce animation.
-        link.addEventListener("click", () => {
+        item.addEventListener("click", () => {
           indicator.classList.remove("indicator-pop");
           void indicator.offsetWidth; // restart the animation
           indicator.classList.add("indicator-pop");
@@ -607,7 +865,15 @@ const island =
       indicator.addEventListener("animationend", () => {
         indicator.classList.remove("indicator-pop");
       });
-      nav.addEventListener("mouseleave", () => updateHeaderActive());
+      nav.addEventListener("mouseleave", () => {
+        // While a submenu is open the pointer often leaves the nav through the
+        // gap between the button and the panel; settling the pill back then
+        // would make it flicker away from the open group.
+        if (nav.querySelector('[aria-expanded="true"]')) return;
+        updateHeaderActive();
+      });
+
+      setupNavGroups(nav);
     }
 
     // Initial placement, re-measure once fonts settle.
@@ -698,6 +964,7 @@ const island =
   window.addEventListener("load", () => setTimeout(markHeaderEntered, 600));
 
   guardNavClicks();
+  setupHeaderDismiss();
 
   toggleNav();
   document.addEventListener("astro:after-swap", toggleNav);
@@ -709,8 +976,10 @@ const island =
   document.addEventListener("astro:after-swap", handleSkipToContent);
 
   // The persisted header keeps stale active state across navigations —
-  // refresh it (and close menus) after each swap.
+  // refresh it (and close menus) after each swap. Without closing the groups
+  // here, an open submenu would ride along to the next page.
   document.addEventListener("astro:after-swap", () => {
+    closeNavGroups();
     updateHeaderActive();
     closeMenus();
   });
