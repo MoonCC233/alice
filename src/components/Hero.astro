@@ -30,12 +30,18 @@ const heatCells = heat.months[0].flatMap((_, week) =>
   }))
 );
 
-// Avatar: render an <img> only when the configured file exists in /public,
-// otherwise fall back to the theme logo so the hero never shows a broken image.
+// Avatar: accept an absolute URL as-is; otherwise render an <img> only when
+// the configured file exists in /public, falling back to the theme logo so the
+// hero never shows a broken image.
+const isRemoteAvatar = /^https?:\/\//.test(hero.avatar);
 const hasAvatar =
   Boolean(hero.avatar) &&
-  existsSync(join(process.cwd(), "public", hero.avatar));
-const avatarUrl = hero.avatar ? getAssetPath(hero.avatar) : "";
+  (isRemoteAvatar || existsSync(join(process.cwd(), "public", hero.avatar)));
+const avatarUrl = hero.avatar
+  ? isRemoteAvatar
+    ? hero.avatar
+    : getAssetPath(hero.avatar)
+  : "";
 
 // Site age ("已运行 N 天") from hero.since.
 let runningDays: number | null = null;

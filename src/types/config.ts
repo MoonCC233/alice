@@ -115,7 +115,10 @@ interface HeroConfig {
   enabled?: boolean;
   /** Identity line under the author name. Falls back to the i18n role string. */
   role?: string;
-  /** Avatar image path relative to the public directory, e.g. "avatar.png". */
+  /**
+   * Avatar image: a path relative to the public directory, e.g. "avatar.png",
+   * or an absolute http(s) URL.
+   */
   avatar?: string;
   /** Site founding date "YYYY-MM-DD" used for the site-age progress bar. */
   since?: string;

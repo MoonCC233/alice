@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Friends/links page (`/links`): card list driven by a new `src/data/friends.ts` data file, with an apply link and zh/en strings
 - Links entry in the header navigation (desktop and mobile) with a new link icon and active-state highlighting
 - Copy-on-click social links: a social entry configured with `copy` instead of `url` renders as a button that puts the value on the clipboard (with a ring + "已复制"/"Copied" confirmation) and shows it in the tooltip. Used for the WeChat ID, which has no add-by-ID URL
+- Hero avatar accepts an absolute `http(s)` URL in `hero.avatar`, used as-is instead of being resolved against the public directory. Local filenames still work and still fall back to the theme logo when the file is missing
 
 ### Fixed
 
