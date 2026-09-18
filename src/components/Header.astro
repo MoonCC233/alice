@@ -472,6 +472,11 @@ const island =
         } else {
           el.classList.toggle("active-nav", active);
         }
+
+        // Announced as the current page instead of a plain link, which is what
+        // makes an inert item acceptable to assistive tech.
+        if (active) el.setAttribute("aria-current", "page");
+        else el.removeAttribute("aria-current");
       });
 
     // Glide the indicator onto the (visible) active nav item.
@@ -496,6 +501,32 @@ const island =
       indicator.style.transform = `translateX(${x})`;
       links.forEach(l => l.classList.toggle("nav-inverted", l === target));
     }
+  }
+
+  // The nav item for the page you are already on keeps its <a> markup, hover
+  // glide and click feedback, but must not navigate — clicking it would just
+  // reload the same page. Blocked here rather than in CSS so the item stays
+  // fully interactive apart from the navigation itself.
+  function guardNavClicks() {
+    const header = document.getElementById("site-header");
+    if (!header || header.dataset.navGuard === "true") return;
+    header.dataset.navGuard = "true";
+
+    header.addEventListener("click", e => {
+      const target = e.target as HTMLElement | null;
+      const link = target?.closest<HTMLAnchorElement>("a[data-nav-path]");
+      if (!link) return;
+
+      const isCurrent =
+        link.getAttribute("data-active") === "true" ||
+        link.classList.contains("active-nav");
+      if (!isCurrent) return;
+
+      e.preventDefault();
+      // No indicator bounce on mobile, so closing the tap-away menu is the
+      // only acknowledgement that the tap registered.
+      if (link.closest("#menu-items")) closeMenus();
+    });
   }
 
   function toggleNav() {
@@ -665,6 +696,8 @@ const island =
   document.addEventListener("astro:after-swap", markHeaderEntered);
   // Initial page load: let the entrance animation finish once, then mark.
   window.addEventListener("load", () => setTimeout(markHeaderEntered, 600));
+
+  guardNavClicks();
 
   toggleNav();
   document.addEventListener("astro:after-swap", toggleNav);

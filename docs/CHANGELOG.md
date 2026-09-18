@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - KaTeX math rendering in posts: inline (`$...$`) and display (`$$...$$`) formulas via remark-math + rehype-katex, with horizontally scrollable display math on narrow screens
 - Friends/links page (`/links`): card list driven by a new `src/data/friends.ts` data file, with an apply link and zh/en strings
 - Links entry in the header navigation (desktop and mobile) with a new link icon and active-state highlighting
+- Copy-on-click social links: a social entry configured with `copy` instead of `url` renders as a button that puts the value on the clipboard (with a ring + "已复制"/"Copied" confirmation) and shows it in the tooltip. Used for the WeChat ID, which has no add-by-ID URL
 
 ### Fixed
 
@@ -25,7 +26,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Site personalisation: author set to TeAnli, `site.profile` pointing at the author's GitHub, site title changed to TeAnli小屋, and the WeChat contact configured in `socials`
 - Redesigned footer into a multi-column layout: brand with site description and socials, site info column with post/tag counts, running days, RSS link and a live clock; theme credit moved to a dedicated bottom bar
+- Header nav items keep their hover glide, click bounce and focusability, but the item for the page you are already on no longer navigates (clicking it used to reload the same page). It is marked `aria-current="page"` so assistive tech announces it as the current page rather than a link
 - Centralised the shared site chrome in `Layout.astro`: pages no longer import and render `Header`/`Footer` themselves, and the breadcrumb is now opt-in via a `breadcrumb` prop. `Footer` loses its `noMarginTop` prop — the layout's content region grows to fill the viewport, so `Pagination`'s own `mt-auto` keeps it directly above the footer
 
 ### Fixed
