@@ -91,12 +91,16 @@ const island =
   data-locale-prefix={localePrefix}
   class="pointer-events-none fixed inset-x-0 top-3 z-40"
 >
-  <div class="header-shell flex items-center justify-between gap-3 px-4 sm:px-5">
-    <!-- Main island: avatar + nav (desktop) / avatar + menu btn (mobile) -->
+  <div
+    class="header-shell flex items-center justify-between gap-3 px-4 sm:px-5"
+  >
+    <!-- Main island: avatar + nav (desktop) / menu btn only (mobile) -->
     <div class:list={[island, "gap-2 py-1.5 ps-1.5 pe-1.5 sm:ps-2 sm:pe-2"]}>
+      <!-- Hidden on mobile: the drawer's own top bar carries the brand, and the
+           logo would otherwise sit pointlessly next to the hamburger. -->
       <a
         href={getRelativeLocaleUrl(locale, "")}
-        class="focus-outline text-foreground hover:text-accent group relative z-10 grid size-11 flex-none place-items-center rounded-full transition-colors duration-200"
+        class="focus-outline text-foreground hover:text-accent group relative z-10 grid size-11 flex-none place-items-center rounded-full transition-colors duration-200 max-sm:hidden"
         aria-label={site.title}
       >
         <Logo
@@ -105,7 +109,11 @@ const island =
         />
       </a>
 
-      <nav id="site-nav" class="relative hidden sm:block" aria-label={site.title}>
+      <nav
+        id="site-nav"
+        class="relative hidden sm:block"
+        aria-label={site.title}
+      >
         <ul class="relative flex items-center gap-0.5">
           <!-- Sliding dark indicator behind the hovered/active nav item -->
           <span
@@ -180,9 +188,7 @@ const island =
                       href={getRelativeLocaleUrl(locale, "archives")}
                       class="hover:bg-muted/60 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
                       data-nav-path="/archives"
-                      aria-current={
-                        isActive("/archives") ? "page" : undefined
-                      }
+                      aria-current={isActive("/archives") ? "page" : undefined}
                     >
                       <IconArchive class="size-4" aria-hidden="true" />
                       {t.nav.archives}
@@ -220,9 +226,10 @@ const island =
       <!-- Mobile menu button (only visible nav control on small screens) -->
       <button
         id="menu-btn"
-        class="focus-outline relative z-10 grid size-10 place-items-center rounded-full transition-colors duration-200 hover:bg-muted/60 sm:hidden"
+        class="focus-outline hover:bg-muted/60 relative z-10 grid size-10 place-items-center rounded-full transition-colors duration-200 sm:hidden"
         aria-label={t.a11y.openMenu}
         aria-expanded="false"
+        aria-haspopup="dialog"
         aria-controls="menu-items"
         data-label-open={t.a11y.openMenu}
         data-label-close={t.a11y.closeMenu}
@@ -232,12 +239,14 @@ const island =
       </button>
     </div>
 
-    <!-- Right island: utilities -->
-    <div class:list={[island, "h-14 gap-1 px-2.5"]}>
-      {
-        features.lightAndDarkMode && (
+    <!-- Right island: utilities. Hidden on mobile — the theme toggle moves into
+         the drawer, and this would otherwise be an empty pill. -->
+    {
+      features.lightAndDarkMode && (
+        <div class:list={[island, "h-14 gap-1 px-2.5 max-sm:hidden"]}>
           <button
             id="theme-btn"
+            data-theme-toggle
             class:list={[navIconLink]}
             title={t.a11y.toggleTheme}
             aria-label={t.a11y.themeAuto}
@@ -246,115 +255,169 @@ const island =
             <IconMoon class="absolute top-1/2 left-1/2 translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
             <IconSunHigh class="absolute top-1/2 left-1/2 translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
           </button>
-        )
-      }
-    </div>
+        </div>
+      )
+    }
   </div>
 
-  <!-- Mobile: dropdown panel below the island.
-       pointer-events-auto is required: the header is pointer-events-none and
-       this panel is its direct child, so without it the whole menu is
-       unclickable (pointer-events is inherited). -->
-  <ul
-    id="menu-items"
-    class="border-border bg-background/95 animate-menu-in pointer-events-auto absolute inset-x-4 top-full z-40 mt-2 hidden flex-col gap-1 rounded-3xl border p-3 backdrop-blur-md sm:hidden"
+  <!-- Mobile drawer: slides in from the inline-start edge.
+       Both nodes are siblings of .header-shell, never children of it: the shell
+       transitions `transform`, and a transformed ancestor becomes the
+       containing block for position:fixed descendants — the drawer would be
+       clipped into the pill. #site-header itself has no transform, so `fixed`
+       resolves against the viewport.
+       pointer-events-auto is required on both: the header is
+       pointer-events-none and the property is inherited. -->
+  <div
+    id="menu-backdrop"
+    aria-hidden="true"
+    class="pointer-events-auto fixed inset-0 z-30 bg-black/40 opacity-0 backdrop-blur-sm transition-opacity duration-300 sm:hidden"
   >
-    <li>
-      <a
-        href={getRelativeLocaleUrl(locale, "")}
-        class:list={[
-          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
-          { "active-nav": isHome },
-        ]}
-        data-nav-path="/"
-      >
-        {t.nav.home}
-      </a>
-    </li>
-    <!-- Grouped like the desktop nav: posts/tags/archives sit in a nested
-         list that collapses under one parent. -->
-    <li data-menu-group>
+  </div>
+
+  <div
+    id="menu-items"
+    role="dialog"
+    aria-modal="true"
+    aria-label={t.nav.menu}
+    class="border-border bg-background pointer-events-auto fixed inset-s-0 top-0 z-40 flex h-dvh w-72 max-w-[85vw] flex-col gap-1 overflow-y-auto overscroll-contain border-e p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-xl sm:hidden"
+  >
+    <div class="flex items-center justify-between gap-2 pb-1">
+      <span class="px-2 text-sm font-semibold">{site.title}</span>
       <button
+        id="drawer-close-btn"
         type="button"
-        id="menu-group-btn"
-        class="flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-2.5 text-start font-medium transition-colors hover:text-foreground"
-        aria-expanded={isGroupActive ? "true" : "false"}
-        aria-controls="menu-group-items"
+        class="focus-outline hover:bg-muted/60 grid size-10 place-items-center rounded-full transition-colors duration-200"
+        aria-label={t.a11y.closeMenu}
       >
-        {t.nav.content}
-        <IconChevronDown class="nav-caret size-4" aria-hidden="true" />
+        <IconX class="size-5" aria-hidden="true" />
       </button>
-      <ul
-        id="menu-group-items"
-        class="border-border ms-3 hidden flex-col gap-1 border-s ps-2"
-      >
-        <li>
-          <a
-            href={getRelativeLocaleUrl(locale, "posts")}
-            class:list={[
-              "block rounded-2xl px-3 py-2 font-medium transition-colors hover:text-foreground",
-              { "active-nav": isActive("/posts") },
-            ]}
-            data-nav-path="/posts"
-          >
-            {t.nav.posts}
-          </a>
-        </li>
-        <li>
-          <a
-            href={getRelativeLocaleUrl(locale, "tags")}
-            class:list={[
-              "block rounded-2xl px-3 py-2 font-medium transition-colors hover:text-foreground",
-              { "active-nav": isActive("/tags") },
-            ]}
-            data-nav-path="/tags"
-          >
-            {t.nav.tags}
-          </a>
-        </li>
-        {
-          features.showArchives && (
-            <li>
-              <a
-                href={getRelativeLocaleUrl(locale, "archives")}
-                class:list={[
-                  "block rounded-2xl px-3 py-2 font-medium transition-colors hover:text-foreground",
-                  { "active-nav": isActive("/archives") },
-                ]}
-                data-nav-path="/archives"
-              >
-                {t.nav.archives}
-              </a>
-            </li>
-          )
-        }
-      </ul>
-    </li>
-    <li>
-      <a
-        href={getRelativeLocaleUrl(locale, "about")}
-        class:list={[
-          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
-          { "active-nav": isActive("/about") },
-        ]}
-        data-nav-path="/about"
-      >
-        {t.nav.about}
-      </a>
-    </li>
-    <li>
-      <a
-        href={getRelativeLocaleUrl(locale, "links")}
-        class:list={[
-          "block rounded-2xl px-4 py-2.5 font-medium transition-colors hover:text-foreground",
-          { "active-nav": isActive("/links") },
-        ]}
-        data-nav-path="/links"
-      >
-        {t.nav.links}
-      </a>
-    </li>
-  </ul>
+    </div>
+
+    <ul class="flex flex-col gap-1">
+      <li>
+        <a
+          href={getRelativeLocaleUrl(locale, "")}
+          class:list={[
+            "hover:text-foreground block rounded-2xl px-4 py-2.5 font-medium transition-colors",
+            { "active-nav": isHome },
+          ]}
+          data-nav-path="/"
+        >
+          {t.nav.home}
+        </a>
+      </li>
+      <!-- Grouped like the desktop nav: posts/tags/archives sit in a nested
+         list that collapses under one parent. -->
+      <li data-menu-group>
+        <button
+          type="button"
+          id="menu-group-btn"
+          class="hover:text-foreground flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-2.5 text-start font-medium transition-colors"
+          aria-expanded={isGroupActive ? "true" : "false"}
+          aria-controls="menu-group-items"
+        >
+          {t.nav.content}
+          <IconChevronDown class="nav-caret size-4" aria-hidden="true" />
+        </button>
+        <ul
+          id="menu-group-items"
+          class="border-border ms-3 hidden flex-col gap-1 border-s ps-2"
+        >
+          <li>
+            <a
+              href={getRelativeLocaleUrl(locale, "posts")}
+              class:list={[
+                "hover:text-foreground block rounded-2xl px-3 py-2 font-medium transition-colors",
+                { "active-nav": isActive("/posts") },
+              ]}
+              data-nav-path="/posts"
+            >
+              {t.nav.posts}
+            </a>
+          </li>
+          <li>
+            <a
+              href={getRelativeLocaleUrl(locale, "tags")}
+              class:list={[
+                "hover:text-foreground block rounded-2xl px-3 py-2 font-medium transition-colors",
+                { "active-nav": isActive("/tags") },
+              ]}
+              data-nav-path="/tags"
+            >
+              {t.nav.tags}
+            </a>
+          </li>
+          {
+            features.showArchives && (
+              <li>
+                <a
+                  href={getRelativeLocaleUrl(locale, "archives")}
+                  class:list={[
+                    "hover:text-foreground block rounded-2xl px-3 py-2 font-medium transition-colors",
+                    { "active-nav": isActive("/archives") },
+                  ]}
+                  data-nav-path="/archives"
+                >
+                  {t.nav.archives}
+                </a>
+              </li>
+            )
+          }
+        </ul>
+      </li>
+      <li>
+        <a
+          href={getRelativeLocaleUrl(locale, "about")}
+          class:list={[
+            "hover:text-foreground block rounded-2xl px-4 py-2.5 font-medium transition-colors",
+            { "active-nav": isActive("/about") },
+          ]}
+          data-nav-path="/about"
+        >
+          {t.nav.about}
+        </a>
+      </li>
+      <li>
+        <a
+          href={getRelativeLocaleUrl(locale, "links")}
+          class:list={[
+            "hover:text-foreground block rounded-2xl px-4 py-2.5 font-medium transition-colors",
+            { "active-nav": isActive("/links") },
+          ]}
+          data-nav-path="/links"
+        >
+          {t.nav.links}
+        </a>
+      </li>
+    </ul>
+
+    <!-- Theme toggle, moved out of the header's right island on mobile.
+         The sun/moon swap is pure CSS (dark: variant classes) — no JS. -->
+    {
+      features.lightAndDarkMode && (
+        <button
+          id="drawer-theme-btn"
+          type="button"
+          data-theme-toggle
+          class="focus-outline hover:bg-muted/60 mt-auto flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-3 text-start font-medium transition-colors"
+          aria-label={t.a11y.toggleTheme}
+        >
+          <span>{t.nav.theme}</span>
+          <span class="relative grid size-5 flex-none place-items-center">
+            <IconMoon
+              class="absolute top-1/2 left-1/2 translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
+              aria-hidden="true"
+            />
+            <IconSunHigh
+              class="absolute top-1/2 left-1/2 translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
+              aria-hidden="true"
+            />
+          </span>
+        </button>
+      )
+    }
+  </div>
 </header>
 
 <style>
@@ -478,9 +541,71 @@ const island =
     color: var(--foreground);
   }
 
+  /* While the drawer is open the whole header — and therefore the backdrop and
+     the drawer, which composite as a unit inside its stacking context — rises
+     above every root-level z-50 layer (back-to-top, reading progress, the
+     lightbox). Without this the z-40 header would trap them all underneath. */
+  #site-header[data-drawer-open] {
+    z-index: 60;
+  }
+
+  /* Closed state is `visibility: hidden`, NOT display:none — the slide-out has
+     to animate, and visibility is what keeps the parked drawer out of both the
+     tab order and the accessibility tree. It transitions on the standard
+     discrete rule: it stays visible for the whole slide-out, then flips. */
+  #menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s;
+  }
+
+  /* The offset must stay in `transform` here: Tailwind v4's translate-*
+     utilities compile to the separate `translate` property, so mixing them
+     with this transition would put the two in different systems. */
+  #menu-items {
+    position: fixed;
+    inset-inline-start: 0;
+    top: 0;
+    height: 100dvh;
+    z-index: 40;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0.3s;
+  }
+
+  /* :global() is required. Astro appends the scope attribute to every compound
+     selector, so a bare [dir="rtl"] compiles to [dir="rtl"][data-astro-cid-…],
+     which <html> never matches. There is no logical-property transform, so the
+     direction is overridden explicitly. */
+  :global([dir="rtl"]) #menu-items {
+    transform: translateX(100%);
+  }
+
+  #site-header[data-drawer-open] #menu-backdrop {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #site-header[data-drawer-open] #menu-items {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .header-shell {
       transition: opacity 0.3s ease;
+    }
+
+    #menu-backdrop,
+    #menu-items {
+      transition: none;
     }
 
     #nav-indicator {
@@ -552,25 +677,22 @@ const island =
           );
         });
 
-    header
-      .querySelectorAll<HTMLElement>("[data-nav-path]")
-      .forEach(el => {
-        const active = matchesNavPath(el);
+    header.querySelectorAll<HTMLElement>("[data-nav-path]").forEach(el => {
+      const active = matchesNavPath(el);
 
-        if (el.classList.contains("nav-item")) {
-          if (active) el.setAttribute("data-active", "true");
-          else el.removeAttribute("data-active");
-        } else {
-          el.classList.toggle("active-nav", active);
-        }
+      if (el.classList.contains("nav-item")) {
+        if (active) el.setAttribute("data-active", "true");
+        else el.removeAttribute("data-active");
+      } else {
+        el.classList.toggle("active-nav", active);
+      }
 
-        // Only real links get the current-page marking. The grouped item is a
-        // <button> that merely *contains* the current page, so the matching
-        // link inside its submenu carries it instead.
-        if (active && el.tagName === "A")
-          el.setAttribute("aria-current", "page");
-        else el.removeAttribute("aria-current");
-      });
+      // Only real links get the current-page marking. The grouped item is a
+      // <button> that merely *contains* the current page, so the matching
+      // link inside its submenu carries it instead.
+      if (active && el.tagName === "A") el.setAttribute("aria-current", "page");
+      else el.removeAttribute("aria-current");
+    });
 
     // Glide the indicator onto the (visible) active nav item.
     const nav = document.getElementById("site-nav");
@@ -645,15 +767,92 @@ const island =
     });
   }
 
-  function toggleNav() {
-    const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
-    const menuItems = document.querySelector("#menu-items");
-    const menuIcon = document.querySelector("#menu-icon");
-    const closeIcon = document.querySelector("#close-icon");
+  // --- Mobile drawer ---------------------------------------------------------
 
-    const groupBtn = document.querySelector<HTMLButtonElement>(
-      "#menu-group-btn"
+  function drawerEls() {
+    return {
+      header: document.getElementById("site-header"),
+      panel: document.getElementById("menu-items"),
+      backdrop: document.getElementById("menu-backdrop"),
+      openBtn: document.querySelector<HTMLButtonElement>("#menu-btn"),
+      closeBtn: document.querySelector<HTMLButtonElement>("#drawer-close-btn"),
+      menuIcon: document.getElementById("menu-icon"),
+      closeIcon: document.getElementById("close-icon"),
+    };
+  }
+
+  // The attribute on the header is the single source of truth. Reading
+  // aria-expanded instead would let the two drift apart.
+  function isDrawerOpen() {
+    return (
+      document
+        .getElementById("site-header")
+        ?.hasAttribute("data-drawer-open") ?? false
     );
+  }
+
+  // Lock via the ROOT element, not just <body>. <html> carries
+  // `overflow-y-scroll`, and per CSS overflow propagation body's overflow only
+  // reaches the viewport while the root's is `visible` — so a body-only lock is
+  // a silent no-op here. Clearing the inline styles hands the root back to its
+  // own overflow-y-scroll class, with no layout shift on mobile.
+  function setScrollLock(locked: boolean) {
+    const value = locked ? "hidden" : "";
+    document.documentElement.style.overflow = value;
+    document.body.style.overflow = value;
+  }
+
+  function setDrawerOpen(open: boolean, restoreFocus = false) {
+    const { header, panel, openBtn, closeBtn, menuIcon, closeIcon } =
+      drawerEls();
+    if (!header || !panel) return;
+
+    const openLabel = openBtn?.dataset.labelOpen ?? "Open menu";
+    const closeLabel = openBtn?.dataset.labelClose ?? "Close menu";
+
+    openBtn?.setAttribute("aria-expanded", open ? "true" : "false");
+    openBtn?.setAttribute("aria-label", open ? closeLabel : openLabel);
+
+    if (open) header.setAttribute("data-drawer-open", "");
+    else header.removeAttribute("data-drawer-open");
+
+    // The pill can be scrolled off-screen (data-hidden) while the hamburger
+    // still holds focus, so a keyboard open would otherwise reveal a drawer
+    // with no visible header behind it.
+    if (open) header.removeAttribute("data-hidden");
+
+    setScrollLock(open);
+
+    if (menuIcon) menuIcon.classList.toggle("hidden", open);
+    if (closeIcon) closeIcon.classList.toggle("hidden", !open);
+
+    if (open) {
+      panel.scrollTop = 0;
+      // Reveal the group if the current page is inside it — otherwise the page
+      // you are on stays hidden behind a collapsed parent. Done on the user's
+      // own action rather than in updateHeaderActive (which also runs on
+      // resize and would fight a manual collapse).
+      if (menuGroupHasActivePage()) toggleMenuGroup(true);
+      // Move focus into the dialog, off the hamburger. The rAF is load-bearing,
+      // not cosmetic: `visibility` interpolates as a discrete step where t = 0
+      // still maps to the start value (`hidden`), so a focus() in this same
+      // task is refused — the panel only becomes focusable once the transition
+      // has ticked. Re-checked inside because a before-swap close can land in
+      // between.
+      requestAnimationFrame(() => {
+        if (isDrawerOpen()) closeBtn?.focus();
+      });
+    } else {
+      toggleMenuGroup(false);
+      if (restoreFocus) openBtn?.focus();
+    }
+  }
+
+  function toggleNav() {
+    const { openBtn, closeBtn, backdrop, panel } = drawerEls();
+
+    const groupBtn =
+      document.querySelector<HTMLButtonElement>("#menu-group-btn");
     if (groupBtn && groupBtn.dataset.bound !== "true") {
       groupBtn.dataset.bound = "true";
       groupBtn.addEventListener("click", () =>
@@ -661,31 +860,72 @@ const island =
       );
     }
 
-    if (!menuBtn || !menuItems || !menuIcon || !closeIcon) return;
-    if (menuBtn.dataset.bound === "true") return;
-    menuBtn.dataset.bound = "true";
+    if (!openBtn || !closeBtn || !backdrop || !panel) return;
+    if (openBtn.dataset.bound === "true") return;
+    openBtn.dataset.bound = "true";
+    closeBtn.dataset.bound = "true";
+    backdrop.dataset.bound = "true";
 
-    const openLabel = menuBtn.dataset.labelOpen ?? "Open menu";
-    const closeLabel = menuBtn.dataset.labelClose ?? "Close menu";
+    openBtn.addEventListener("click", () =>
+      setDrawerOpen(!isDrawerOpen(), true)
+    );
+    closeBtn.addEventListener("click", () => setDrawerOpen(false, true));
+    backdrop.addEventListener("click", () => setDrawerOpen(false, true));
+  }
 
-    menuBtn.addEventListener("click", () => {
-      const openMenu = menuBtn.getAttribute("aria-expanded") === "true";
+  // Escape to dismiss, and a Tab trap: role="dialog" + aria-modal promise that
+  // focus cannot reach the scrimmed page behind. Bound once on `document`
+  // (module scripts re-run on navigation, hence the window flag).
+  function setupDrawerKeyboard() {
+    const w = window as unknown as { __drawerKeyBound?: boolean };
+    if (w.__drawerKeyBound) return;
+    w.__drawerKeyBound = true;
 
-      menuBtn.setAttribute("aria-expanded", openMenu ? "false" : "true");
-      menuBtn.setAttribute("aria-label", openMenu ? openLabel : closeLabel);
+    document.addEventListener("keydown", e => {
+      if (!isDrawerOpen()) return;
+      const { panel } = drawerEls();
+      if (!panel) return;
 
-      // Rounded panel dropping below the floating island on mobile.
-      menuItems.classList.toggle("hidden", openMenu);
-      menuItems.classList.toggle("flex", !openMenu);
-      menuItems.classList.toggle("animate-menu-in", !openMenu);
-      menuIcon.classList.toggle("hidden", !openMenu);
-      closeIcon.classList.toggle("hidden", openMenu);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setDrawerOpen(false, true);
+        return;
+      }
+      if (e.key !== "Tab") return;
 
-      // On the way in, reveal the group if the current page is inside it —
-      // otherwise the page you are on stays hidden behind a collapsed parent.
-      // Done here, on the user's own action, rather than in updateHeaderActive
-      // (which also runs on resize and would fight a manual collapse).
-      if (!openMenu && menuGroupHasActivePage()) toggleMenuGroup(true);
+      // Filter by rendered box: the collapsed group's links are in the DOM but
+      // invisible, and would otherwise become a phantom "last" element that
+      // stops the wrap-around from ever firing.
+      const focusables = [
+        ...panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ),
+      ].filter(el => el.getClientRects().length > 0);
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey && (active === first || !panel.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  // Growing past `sm` CSS-hides the drawer; without this the scroll lock would
+  // stay set and the page would be unscrollable with no drawer in sight.
+  function setupDrawerBreakpoint() {
+    const w = window as unknown as { __drawerBreakpointBound?: boolean };
+    if (w.__drawerBreakpointBound) return;
+    w.__drawerBreakpointBound = true;
+
+    window.matchMedia("(min-width: 640px)").addEventListener("change", e => {
+      if (e.matches) closeMenus();
     });
   }
 
@@ -696,9 +936,8 @@ const island =
   }
 
   function toggleMenuGroup(open: boolean) {
-    const groupBtn = document.querySelector<HTMLButtonElement>(
-      "#menu-group-btn"
-    );
+    const groupBtn =
+      document.querySelector<HTMLButtonElement>("#menu-group-btn");
     const groupItems = document.querySelector("#menu-group-items");
     if (!groupBtn || !groupItems) return;
 
@@ -708,23 +947,15 @@ const island =
     groupItems.classList.toggle("animate-menu-in", open);
   }
 
-  // Close the mobile menu (e.g. after navigating with it open). The group
+  // Close the mobile drawer (e.g. after navigating with it open). The group
   // collapses with it, so reopening always starts from a known state.
+  // Never restores focus: this runs during navigation, where focusing the
+  // hamburger would steal focus from the incoming page.
   function closeMenus() {
-    const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
-    const menuItems = document.querySelector("#menu-items");
-    const menuIcon = document.querySelector("#menu-icon");
-    const closeIcon = document.querySelector("#close-icon");
-
-    if (menuBtn && menuItems && menuIcon && closeIcon) {
-      menuBtn.setAttribute("aria-expanded", "false");
-      menuItems.classList.add("hidden");
-      menuItems.classList.remove("flex");
-      menuIcon.classList.remove("hidden");
-      closeIcon.classList.add("hidden");
-    }
-
+    setDrawerOpen(false, false);
     toggleMenuGroup(false);
+    // Self-healing, so no path can strand the page with a locked scroll.
+    setScrollLock(false);
   }
 
   // How long the submenu lingers after the pointer leaves the group, so it can
@@ -969,6 +1200,9 @@ const island =
   toggleNav();
   document.addEventListener("astro:after-swap", toggleNav);
 
+  setupDrawerKeyboard();
+  setupDrawerBreakpoint();
+
   setupNavIndicator();
   document.addEventListener("astro:after-swap", setupNavIndicator);
 
@@ -984,11 +1218,26 @@ const island =
     closeMenus();
   });
 
+  // Close before the swap too: otherwise the View Transition snapshots the
+  // outgoing page with the drawer open and the incoming page paints one frame
+  // of it. (The lightbox does the same for its overlay.)
+  if (
+    !(window as unknown as { __drawerSwapBound?: boolean }).__drawerSwapBound
+  ) {
+    (window as unknown as { __drawerSwapBound?: boolean }).__drawerSwapBound =
+      true;
+    document.addEventListener("astro:before-swap", closeMenus);
+  }
+
   // Bound once on `document` (persists across view transitions); the handler
   // looks up the current header element on every event.
-  if (!(window as unknown as { __headerScrollBound?: boolean }).__headerScrollBound) {
-    (window as unknown as { __headerScrollBound?: boolean }).__headerScrollBound =
-      true;
+  if (
+    !(window as unknown as { __headerScrollBound?: boolean })
+      .__headerScrollBound
+  ) {
+    (
+      window as unknown as { __headerScrollBound?: boolean }
+    ).__headerScrollBound = true;
     handleHeaderScroll();
   }
 </script>

@@ -10,6 +10,8 @@ export default {
     archives: "Archives",
     search: "Search",
     links: "Links",
+    menu: "Menu",
+    theme: "Theme",
   },
   post: {
     publishedAt: "Published at",
@@ -64,7 +66,8 @@ export default {
     unitDay: "days",
     siteRunning: "Running for {{days}} days",
     eventCountdown: "{{days}} days to go",
-    heatmapAria: "Blog activity heatmap for {{year}}, {{count}} updates in total",
+    heatmapAria:
+      "Blog activity heatmap for {{year}}, {{count}} updates in total",
   },
   footer: {
     copyright: "Copyright",

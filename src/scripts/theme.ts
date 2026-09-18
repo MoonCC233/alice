@@ -47,7 +47,10 @@ function toggleThemeWithReveal(event: Event, btn: HTMLElement): void {
   // Origin: the click point, or the button centre for keyboard activation.
   let x: number;
   let y: number;
-  if (event instanceof MouseEvent && (event.clientX !== 0 || event.clientY !== 0)) {
+  if (
+    event instanceof MouseEvent &&
+    (event.clientX !== 0 || event.clientY !== 0)
+  ) {
     x = event.clientX;
     y = event.clientY;
   } else {
@@ -101,15 +104,20 @@ function toggleThemeWithReveal(event: Event, btn: HTMLElement): void {
 
 function setup(): void {
   reflect();
-  const btn = document.querySelector("#theme-btn");
-  if (!btn) return;
-  // The theme button lives in the persisted header (transition:persist),
-  // so it is NOT replaced across View Transitions — guard against
-  // re-adding the click listener on every astro:after-swap.
-  if ((btn as HTMLElement).dataset.themeBound === "true") return;
-  (btn as HTMLElement).dataset.themeBound = "true";
-  btn.addEventListener("click", e => {
-    toggleThemeWithReveal(e, btn as HTMLElement);
+  // There are two toggles: the icon button in the header's right island
+  // (desktop) and the labelled row inside the mobile drawer.
+  //
+  // Both live inside the persisted header (transition:persist), so they are
+  // NOT replaced across View Transitions — guard per element against
+  // re-adding the click listener on every astro:after-swap. Binding both is
+  // safe precisely because the guard is per element: without it, a shared
+  // marker would leave the second button dead.
+  document.querySelectorAll<HTMLElement>("[data-theme-toggle]").forEach(btn => {
+    if (btn.dataset.themeBound === "true") return;
+    btn.dataset.themeBound = "true";
+    btn.addEventListener("click", e => {
+      toggleThemeWithReveal(e, btn);
+    });
   });
 }
 

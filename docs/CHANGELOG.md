@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Copy-on-click social links: a social entry configured with `copy` instead of `url` renders as a button that puts the value on the clipboard (with a ring + "已复制"/"Copied" confirmation) and shows it in the tooltip. Used for the WeChat ID, which has no add-by-ID URL
 - Hero avatar accepts an absolute `http(s)` URL in `hero.avatar`, used as-is instead of being resolved against the public directory. Local filenames still work and still fall back to the theme logo when the file is missing
 - Blog list page (`/posts`) gets the gliding hover highlight previously only on the home page. The list markup, styles and script now live in a shared `PostList.astro` component used by both pages, so the two can no longer drift apart
+- Mobile nav drawer: the hamburger opens a drawer sliding in from the inline-start edge, holding the full nav plus the light/dark toggle as a full-width labelled row. It is a `role="dialog"` with a Tab trap, Escape and backdrop dismissal, and a scroll lock set on the root element; it closes itself on a breakpoint change and before each View Transition so it never rides along to the next page. The theme toggle is now two elements — the desktop island button and the drawer row — bound through a shared `data-theme-toggle` hook
 
 ### Fixed
 
@@ -32,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - Redesigned footer into a multi-column layout: brand with site description and socials, site info column with post/tag counts, running days, RSS link and a live clock; theme credit moved to a dedicated bottom bar
 - Header nav items keep their hover glide, click bounce and focusability, but the item for the page you are already on no longer navigates (clicking it used to reload the same page). It is marked `aria-current="page"` so assistive tech announces it as the current page rather than a link
 - Centralised the shared site chrome in `Layout.astro`: pages no longer import and render `Header`/`Footer` themselves, and the breadcrumb is now opt-in via a `breadcrumb` prop. `Footer` loses its `noMarginTop` prop — the layout's content region grows to fill the viewport, so `Pagination`'s own `mt-auto` keeps it directly above the footer
+- The header logo is hidden on mobile, leaving the hamburger alone in the island. The drawer's own top bar carries the brand, and the utilities island is hidden there too now that its only control moved into the drawer
 
 ### Fixed
 

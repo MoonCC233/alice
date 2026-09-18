@@ -10,6 +10,8 @@ export default {
     archives: "归档",
     search: "搜索",
     links: "友链",
+    menu: "菜单",
+    theme: "主题",
   },
   post: {
     publishedAt: "发布于",

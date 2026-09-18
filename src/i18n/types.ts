@@ -8,6 +8,8 @@ export interface UIStrings {
     archives: string;
     search: string;
     links: string;
+    menu: string;
+    theme: string;
   };
   post: {
     publishedAt: string;
