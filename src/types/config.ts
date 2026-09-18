@@ -55,20 +55,35 @@ interface FeaturesConfig {
   search?: "pagefind" | false;
 }
 
-interface SocialLink {
+interface SocialLinkFields {
   /**
    * Must match an SVG filename in src/assets/icons/socials/.
    * e.g. "github" → src/assets/icons/socials/github.svg
    */
   name: string;
-  url: string;
   /**
-   * Accessible label for the icon link (aria-label, title attribute).
-   * Auto-generated if omitted: "{site.title} on GitHub", "Send an email to {site.title}", etc.
+   * Accessible label for the icon (aria-label, title attribute).
+   * Auto-generated if omitted: "{site.title} on GitHub", "Send an email to {site.title}", "Copy Wechat: tal…", etc.
    * Override when the default wording doesn't fit.
    */
   linkTitle?: string;
 }
+
+/**
+ * Either a profile to open, or a value to copy on click. Some platforms
+ * (WeChat) expose no URL that adds a contact by ID, so those entries copy
+ * their ID instead and show it in the tooltip.
+ */
+type SocialLink = SocialLinkFields &
+  (
+    | {
+        url: string;
+      }
+    | {
+        /** Copied to the clipboard on click; also shown in the tooltip. */
+        copy: string;
+      }
+  );
 
 interface ShareLink {
   /**

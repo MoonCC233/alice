@@ -115,6 +115,7 @@ export default {
     closeImagePreview: "关闭图片预览",
     sendEmailTo: "发送邮件给{{name}}",
     onPlatform: "{{name}} 的 {{platform}}",
+    copyValue: "复制{{platform}}：{{value}}",
     themeAuto: "自动",
     language: "切换语言",
     langComingSoon: "English 即将支持",

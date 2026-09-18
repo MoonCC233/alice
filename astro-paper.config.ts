@@ -3,10 +3,10 @@ import { defineAstroPaperConfig } from "./src/types/config";
 export default defineAstroPaperConfig({
   site: {
     url: "https://astro-paper.pages.dev/",
-    title: "AstroPaper",
+    title: "TeAnli小屋",
     description: "一个极简、响应式且 SEO 友好的 Astro 博客主题。",
-    author: "Sat Naing",
-    profile: "https://satna.ing",
+    author: "TeAnli",
+    profile: "https://github.com/TeAnli",
     location: "中国",
     lang: "zh",
     timezone: "Asia/Shanghai",
@@ -35,7 +35,12 @@ export default defineAstroPaperConfig({
     event: { name: "中秋节", date: "2026-09-25" },
   },
   socials: [
-    { name: "wechat",   url: "https://weixin.qq.com/" },
+    // 微信没有「按 ID 加好友」的跳转协议，这个图标点击时复制微信号
+    {
+      name: "wechat",
+      copy: "tal15739848688",
+      linkTitle: "复制微信号：tal15739848688",
+    },
     { name: "github",   url: "https://github.com/satnaing/astro-paper" },
     { name: "bilibili", url: "https://space.bilibili.com/000000000" },
   ],

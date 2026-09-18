@@ -112,6 +112,7 @@ export interface UIStrings {
     closeImagePreview: string;
     sendEmailTo: string;
     onPlatform: string;
+    copyValue: string;
     themeAuto: string;
     language: string;
     langComingSoon: string;

@@ -115,6 +115,7 @@ export default {
     closeImagePreview: "Close image preview",
     sendEmailTo: "Send an email to {{name}}",
     onPlatform: "{{name}} on {{platform}}",
+    copyValue: "Copy {{platform}}: {{value}}",
     themeAuto: "auto",
     language: "Switch language",
     langComingSoon: "Coming soon",

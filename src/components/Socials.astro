@@ -11,30 +11,109 @@ const icons = import.meta.glob<{
   default: (_props: Record<string, unknown>) => unknown;
 }>("/src/assets/icons/socials/*.svg");
 
+// Shared by the link and copy variants so both render as one icon control.
+const controlClass =
+  "p-2 transition-colors duration-200 hover:text-accent hover:rotate-6 sm:p-1";
+const iconClass =
+  "inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110";
+
+function defaultTitle(
+  name: string,
+  url: string | undefined,
+  copy: string | undefined
+): string {
+  const platform = name.charAt(0).toUpperCase() + name.slice(1);
+  if (copy) {
+    return tplStr(t.a11y.copyValue, { platform, value: copy });
+  }
+  if (url?.startsWith("mailto:") || name === "mail") {
+    return tplStr(t.a11y.sendEmailTo, { name: site.title });
+  }
+  return tplStr(t.a11y.onPlatform, { name: site.title, platform });
+}
+
 const items = await Promise.all(
-  socials.map(async ({ name, url, linkTitle }) => {
+  socials.map(async link => {
+    const { name, linkTitle } = link;
+    const url = "url" in link ? link.url : undefined;
+    const copy = "copy" in link ? link.copy : undefined;
+
     const mod = await icons[`/src/assets/icons/socials/${name}.svg`]?.();
     const Icon = mod?.default;
-    const platformName = name.charAt(0).toUpperCase() + name.slice(1);
-    const title =
-      linkTitle ??
-      (url.startsWith("mailto:") || name === "mail"
-        ? tplStr(t.a11y.sendEmailTo, { name: site.title })
-        : tplStr(t.a11y.onPlatform, { name: site.title, platform: platformName }));
-    return { url, title, Icon };
+
+    return { url, copy, title: linkTitle ?? defaultTitle(name, url, copy), Icon };
   })
 );
 ---
 
 <div class="flex flex-wrap items-center gap-1">
   {
-    items.map(({ url, title, Icon }) =>
-      Icon ? (
-        <LinkButton href={url} class="p-2 hover:rotate-6 sm:p-1" title={title}>
-          <Icon class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" />
+    items.map(({ url, copy, title, Icon }) =>
+      !Icon ? null : copy ? (
+        <button
+          type="button"
+          data-social-copy={copy}
+          data-copied-label={t.a11y.copiedButton}
+          data-title={title}
+          title={title}
+          aria-label={title}
+          class:list={["group inline-flex items-center gap-1", controlClass]}
+        >
+          <Icon class={iconClass} />
+        </button>
+      ) : (
+        <LinkButton href={url} class:list={["group", controlClass]} title={title}>
+          <Icon class={iconClass} />
           <span class="sr-only">{title}</span>
         </LinkButton>
-      ) : null
+      )
     )
   }
 </div>
+
+<script>
+  // Copy-on-click socials: some platforms (WeChat) expose no URL that adds a
+  // contact by ID, so those entries put their ID on the clipboard instead.
+  // Bound on document rather than inside the component because the footer —
+  // and with it these buttons — is replaced on every View Transition.
+  function initSocialCopy() {
+    document
+      .querySelectorAll<HTMLButtonElement>("button[data-social-copy]")
+      .forEach(btn => {
+        if (btn.dataset.copyBound === "true") return;
+        btn.dataset.copyBound = "true";
+
+        btn.addEventListener("click", async () => {
+          const value = btn.dataset.socialCopy;
+          if (!value) return;
+          try {
+            await navigator.clipboard.writeText(value);
+          } catch {
+            // Clipboard unavailable (insecure context) — nothing was copied,
+            // so don't claim otherwise.
+            return;
+          }
+
+          btn.dataset.copied = "true";
+          btn.title = btn.dataset.copiedLabel ?? btn.title;
+          setTimeout(() => {
+            delete btn.dataset.copied;
+            btn.title = btn.dataset.title ?? "";
+          }, 1200);
+        });
+      });
+  }
+
+  initSocialCopy();
+  document.addEventListener("astro:after-swap", initSocialCopy);
+</script>
+
+<style>
+  /* Copy confirmation: a brief dashed accent ring, echoing the site's
+     focus-visible outline. */
+  button[data-social-copy][data-copied] {
+    border-radius: 9999px;
+    outline: 2px dashed var(--accent);
+    outline-offset: 1px;
+  }
+</style>
