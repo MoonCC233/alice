@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Header nav items keep their hover glide, click bounce and focusability, but the item for the page you are already on no longer navigates (clicking it used to reload the same page). It is marked `aria-current="page"` so assistive tech announces it as the current page rather than a link
 - Centralised the shared site chrome in `Layout.astro`: pages no longer import and render `Header`/`Footer` themselves, and the breadcrumb is now opt-in via a `breadcrumb` prop. `Footer` loses its `noMarginTop` prop — the layout's content region grows to fill the viewport, so `Pagination`'s own `mt-auto` keeps it directly above the footer
 - The header logo is hidden on mobile, leaving the hamburger alone in the island. The drawer's own top bar carries the brand, and the utilities island is hidden there too now that its only control moved into the drawer
+- Removed the upstream AstroPaper demo content: 15 posts (release notes, theme how-tos, colour-scheme docs, the example draft) plus the 8 images only those posts referenced. Four posts remain as fixtures for the theme's own features — the KaTeX test post and three long-form example posts, which between them cover prose styles, TOC, reading time and adjacent-post navigation
 
 ### Fixed
 
