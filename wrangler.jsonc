@@ -1,0 +1,13 @@
+{
+  // Static-only deploy: Wrangler uploads ./dist as assets with no Worker
+  // script. The @astrojs/cloudflare adapter is deliberately absent — every
+  // route is pre-rendered — but this file's presence is also what stops
+  // `wrangler deploy` from auto-running `astro add` on Cloudflare's builder,
+  // which is what the pnpm workspace-root failure came from.
+  "name": "astro-paper-v6",
+  "compatibility_date": "2026-09-20",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}
