@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="Cloudflare 免费套餐全景">
+  <defs>
+    <linearGradient id="bg-cf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c1c1f"/>
+      <stop offset="1" stop-color="#2b2b30"/>
+    </linearGradient>
+    <pattern id="grid-cf" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0v40" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+    <style>
+      .cjk { font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="750" fill="url(#bg-cf)"/>
+  <rect width="1200" height="750" fill="url(#grid-cf)"/>
+
+  <!-- inbound traffic -->
+  <g stroke="#ffffff" stroke-opacity="0.22" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M160 318L418 344"/>
+    <path d="M160 398L418 372"/>
+  </g>
+
+  <!-- the edge: cloud -->
+  <g stroke="#ffffff" stroke-opacity="0.28" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M505 400a70 70 0 0 0 0-140a95 95 0 0 1 190 0a70 70 0 0 1 0 140Z"/>
+  </g>
+
+  <!-- outbound traffic to origin -->
+  <g stroke="#ffffff" stroke-opacity="0.22" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M760 330h100"/>
+  </g>
+
+  <!-- origin server -->
+  <g stroke="#ffffff" stroke-opacity="0.22" stroke-width="2" fill="none" stroke-linejoin="round">
+    <rect x="860" y="296" width="140" height="68" rx="8"/>
+    <path d="M888 320h84M888 340h84"/>
+  </g>
+
+  <g stroke="#ffffff" stroke-opacity="0.14" stroke-width="2" fill="none">
+    <path d="M120 560h960"/>
+  </g>
+  <text x="120" y="620" class="cjk" fill="#ffffff" font-size="54" font-weight="600">
+    Cloudflare 免费套餐全景
+  </text>
+  <text x="120" y="668" class="cjk" fill="#ffffff" fill-opacity="0.45" font-size="24" letter-spacing="6">
+    DNS &#183; TUNNEL &#183; 内网穿透
+  </text>
+</svg>
