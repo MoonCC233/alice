@@ -13,10 +13,12 @@ import IconX from "@/assets/icons/IconX.svg";
 import IconChevronDown from "@/assets/icons/IconChevronDown.svg";
 import Logo from "@/assets/icons/Logo.svg";
 import { stripBase, stripLocale } from "@/utils/withBase";
-import { useTranslations } from "@/i18n";
+import { daysUntil } from "@/utils/siteAge";
+import { getSiteStats } from "@/utils/getSiteStats";
+import { useTranslations, tplStr } from "@/i18n";
 import config from "@/config";
 
-const { site, features } = config;
+const { site, features, hero } = config;
 
 const locale = Astro.currentLocale ?? config.site.lang;
 const t = useTranslations(locale);
@@ -62,6 +64,34 @@ const navIconLink =
   "relative grid size-9 place-items-center rounded-full transition-all duration-200 hover:bg-muted/60 hover:text-foreground active:scale-95 max-sm:size-10";
 const island =
   "bg-background/80 border-border animate-header-in pointer-events-auto flex h-14 flex-none items-center rounded-full border backdrop-blur-md";
+
+// --- Dynamic island ---------------------------------------------------------
+// Gated on hero.enabled: every value and string it shows is hero-derived, so
+// the hero's existing switch also removes the island. No new config surface.
+const showIsland = hero.enabled;
+const islandStats = showIsland ? await getSiteStats() : null;
+
+const islandNow = new Date();
+
+// h23 rather than hour12:false, which renders "24:00" at midnight in some engines.
+const islandClockFmt = new Intl.DateTimeFormat(locale, {
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+const islandEventDays = hero.event
+  ? daysUntil(hero.event.date, site.timezone, islandNow)
+  : null;
+// The space before the unit is what makes this read correctly in both
+// languages ("中秋 6 天" / "6 days", not "6days").
+const islandCountdownTemplate = hero.event
+  ? `${hero.event.name} {{days}} ${t.hero.unitDay}`
+  : "";
+// No key for "today" / "it has passed", so the countdown simply steps aside.
+const islandHasCountdown = islandEventDays !== null && islandEventDays > 0;
+const islandCountdownText = islandHasCountdown
+  ? tplStr(islandCountdownTemplate, { days: islandEventDays })
+  : "";
 ---
 
 <a
@@ -254,6 +284,112 @@ const island =
           >
             <IconMoon class="absolute top-1/2 left-1/2 translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
             <IconSunHigh class="absolute top-1/2 left-1/2 translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+          </button>
+        </div>
+      )
+    }
+
+    <!-- Dynamic island: a live clock + festival countdown that MORPHS IN PLACE
+         into a wider capsule of site stats. The component itself changes size
+         and position — there is no separate panel — and it stays visible when
+         the page scrolls.
+
+         Centring is flexbox, never translateX(-50%): `transform` must stay free
+         for the pill's animate-header-in, which owns it. `inset-x-0` spans the
+         shell's PADDING box, which does not change when data-scrolled grows
+         padding-inline — so the pill stays dead-centre while the two flex-none
+         islands converge inwards.
+
+         Both content layers are absolutely positioned so neither contributes
+         width, and the inactive one is `visibility: hidden`: that keeps it out
+         of the button's accessible name (a button's name is its text content)
+         as well as out of the tab order. -->
+    {
+      showIsland && islandStats && (
+        <div
+          id="island-slot"
+          data-tz={site.timezone}
+          data-since={hero.since}
+          data-event={hero.event?.date ?? ""}
+          class="pointer-events-none absolute inset-x-0 top-0 z-20 hidden h-14 items-start justify-center pt-2.5 xl:flex"
+        >
+          {/* The button holds two absolutely stacked layers — the collapsed
+              clock + countdown, and the expanded clock + four stats — and the
+              stylesheet cross-fades between them while the button's own width
+              and height transition. */}
+          <button
+            id="island-btn"
+            type="button"
+            class="bg-background/80 border-border animate-header-in pointer-events-auto relative h-9 w-[9.5rem] flex-none overflow-hidden rounded-full border backdrop-blur-md"
+            aria-expanded="false"
+          >
+            <span class="island-layer island-compact absolute inset-0 flex items-center justify-center gap-1.5 text-[13px] leading-none font-medium">
+              <time data-island-clock class="text-foreground tabular-nums">
+                {islandClockFmt.format(islandNow)}
+              </time>
+              <span
+                data-island-event
+                class:list={[
+                  "items-center gap-1.5",
+                  islandHasCountdown ? "flex" : "hidden",
+                ]}
+              >
+                <span class="text-border" aria-hidden="true">
+                  &#183;
+                </span>
+                <span
+                  data-island-countdown
+                  data-template={islandCountdownTemplate}
+                  class="text-muted-foreground"
+                >
+                  {islandCountdownText}
+                </span>
+              </span>
+            </span>
+
+            <span class="island-layer island-detail absolute inset-0 flex items-center justify-center gap-3">
+              <time
+                data-island-clock
+                class="text-foreground text-[15px] leading-none font-semibold tabular-nums"
+              >
+                {islandClockFmt.format(islandNow)}
+              </time>
+              <span class="bg-border h-7 w-px" aria-hidden="true" />
+              <span class="flex items-start gap-3">
+                <span class="flex flex-col items-center">
+                  <span class="text-foreground text-sm leading-none font-semibold tabular-nums">
+                    {islandStats.totalPosts}
+                  </span>
+                  <span class="text-muted-foreground mt-1.5 text-[10px] leading-none">
+                    {t.hero.statPosts}
+                  </span>
+                </span>
+                <span class="flex flex-col items-center">
+                  <span class="text-foreground text-sm leading-none font-semibold tabular-nums">
+                    {islandStats.activeDays}
+                  </span>
+                  <span class="text-muted-foreground mt-1.5 text-[10px] leading-none">
+                    {t.hero.statActiveDays}
+                  </span>
+                </span>
+                <span class="flex flex-col items-center">
+                  <span class="text-foreground text-sm leading-none font-semibold tabular-nums">
+                    {islandStats.thisMonth}
+                  </span>
+                  <span class="text-muted-foreground mt-1.5 text-[10px] leading-none">
+                    {t.hero.statThisMonth}
+                  </span>
+                </span>
+                <span class="flex flex-col items-center">
+                  <span class="text-foreground text-sm leading-none font-semibold tabular-nums">
+                    {islandStats.longestStreak}
+                  </span>
+                  <span class="text-muted-foreground mt-1.5 text-[10px] leading-none">
+                    {t.hero.statLongestStreak}
+                  </span>
+                </span>
+              </span>
+            </span>
           </button>
         </div>
       )
@@ -497,6 +633,9 @@ const island =
   /* Converge: growing inline padding slides the islands towards
      the centered nav pill while the nav itself stays put. */
   .header-shell {
+    position: relative;
+    /* Current width of the dynamic island, used by the converge cap below. */
+    --island-w: 9.5rem;
     padding-inline: 1rem;
     transition:
       padding-inline 0.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -509,8 +648,17 @@ const island =
       padding-inline: 1.25rem;
     }
 
+    /* Converge, capped so it can never reach the dynamic island that now
+       occupies the centre. The island is centred, so the room it has on the
+       left is `100vw/2 - islandWidth/2 - leftIslandWidth` — the clamp is
+       min()'d against exactly that. `27rem` (432px) is the MEASURED width of
+       the left island (logo + the four nav items) at xl; re-measure and update
+       it if the nav changes. Without the island the old clamp is unchanged. */
     #site-header[data-scrolled] .header-shell {
-      padding-inline: clamp(4rem, 12vw, 10rem);
+      padding-inline: min(
+        clamp(4rem, 12vw, 10rem),
+        max(0px, calc((100vw - var(--island-w)) / 2 - 27rem))
+      );
     }
   }
 
@@ -598,6 +746,61 @@ const island =
     visibility: visible;
   }
 
+  /* Dynamic island: the pill itself grows in place — width and height both
+     transition, so the component changes size rather than revealing a separate
+     panel. The radius stays fully round, which is what makes the collapsed pill
+     and the wide capsule read as the same object. */
+  /* The pill's TOP edge is the anchor: the slot aligns to flex-start and the
+     pill grows downward from there, so its y position never shifts. The easing
+     overshoots (the same back curve the nav icons use) so the capsule springs
+     past its final size and settles back — an elastic feel rather than a
+     slide. */
+  #island-btn {
+    transition:
+      width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+      height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  #site-header[data-island-open] #island-btn {
+    width: 20rem;
+    height: 4rem;
+  }
+
+  /* Expanding the island eats centre space, so the converge cap must know the
+     wider width — otherwise the islands would slide into the open capsule.
+     22rem, not 20rem: the spring overshoots past the final width, and the cap
+     has to reserve room for the peak or the bounce would clip the left island. */
+  #site-header[data-island-open] .header-shell {
+    --island-w: 22rem;
+  }
+
+  /* One layer is always inert. `visibility` — not just opacity — keeps the
+     hidden layer out of the button's accessible name, since a button's name is
+     its text content; without it the collapsed pill would announce the expanded
+     stats too. Listing visibility in the transition flips it at the end of the
+     fade-out and the start of the fade-in. */
+  .island-layer {
+    transition:
+      opacity 0.2s ease,
+      visibility 0.2s;
+  }
+
+  /* Lead the detail layer in slightly behind the size change so it fades up
+     into an already-mostly-grown capsule instead of being clipped mid-flight. */
+  #site-header[data-island-open] .island-detail {
+    transition-delay: 0.12s;
+  }
+
+  #site-header[data-island-open] .island-compact {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  #site-header:not([data-island-open]) .island-detail {
+    opacity: 0;
+    visibility: hidden;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .header-shell {
       transition: opacity 0.3s ease;
@@ -605,6 +808,12 @@ const island =
 
     #menu-backdrop,
     #menu-items {
+      transition: none;
+    }
+
+    #island-btn,
+    .island-layer,
+    #site-header[data-island-open] .island-detail {
       transition: none;
     }
 
@@ -636,6 +845,8 @@ const island =
   // Transitions. Every setup() below must therefore be IDEMPOTENT (guarded
   // with a data-flag) — after-swap handlers re-run against the *same* nodes.
   // ---------------------------------------------------------------------------
+
+  import { dayKeyIn, daysUntil } from "@/utils/siteAge";
 
   // Resolve a raw URL path (e.g. "/zh/posts/x/" or "/blog/en/posts/")
   // against the configured base + locale prefix → "" or "/posts/x".
@@ -929,6 +1140,150 @@ const island =
     });
   }
 
+  // --- Dynamic island --------------------------------------------------------
+
+  function islandEls() {
+    return {
+      slot: document.getElementById("island-slot"),
+      button: document.getElementById("island-btn"),
+      event: document.querySelector<HTMLElement>("[data-island-event]"),
+      countdown: document.querySelector<HTMLElement>("[data-island-countdown]"),
+    };
+  }
+
+  // The header attribute is the single source of truth — the CSS morph keys off
+  // it, and aria-expanded is mirrored onto the button for assistive tech. Same
+  // arrangement as the drawer's data-drawer-open.
+  function isIslandOpen() {
+    return (
+      document
+        .getElementById("site-header")
+        ?.hasAttribute("data-island-open") ?? false
+    );
+  }
+
+  function setIslandOpen(open: boolean, restoreFocus = false) {
+    const header = document.getElementById("site-header");
+    const button = document.getElementById("island-btn");
+    if (!header || !button) return;
+
+    if (open) header.setAttribute("data-island-open", "");
+    else header.removeAttribute("data-island-open");
+    button.setAttribute("aria-expanded", open ? "true" : "false");
+
+    if (!open && restoreFocus) button.focus();
+  }
+
+  function closeIsland() {
+    if (isIslandOpen()) setIslandOpen(false);
+  }
+
+  function setupIsland() {
+    const { button } = islandEls();
+    if (!button) return;
+
+    if (button.dataset.bound !== "true") {
+      button.dataset.bound = "true";
+      button.addEventListener("click", () => setIslandOpen(!isIslandOpen()));
+    }
+
+    setupIslandDismiss();
+    setupIslandBreakpoint();
+  }
+
+  // Escape and click-outside. Bound once on `document` (module scripts re-run on
+  // navigation, hence the window flag — same as the drawer's keyboard setup).
+  function setupIslandDismiss() {
+    const w = window as unknown as { __islandDismissBound?: boolean };
+    if (w.__islandDismissBound) return;
+    w.__islandDismissBound = true;
+
+    document.addEventListener("click", e => {
+      if (!isIslandOpen()) return;
+      const { slot } = islandEls();
+      const target = e.target as Node | null;
+      if (slot && target && slot.contains(target)) return;
+      setIslandOpen(false);
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Escape" || !isIslandOpen()) return;
+      e.preventDefault();
+      setIslandOpen(false, true);
+    });
+  }
+
+  // The island is xl-only. Shrinking past that breakpoint CSS-hides the slot,
+  // which would strand a panel that is still logically open.
+  function setupIslandBreakpoint() {
+    const w = window as unknown as { __islandBreakpointBound?: boolean };
+    if (w.__islandBreakpointBound) return;
+    w.__islandBreakpointBound = true;
+
+    window.matchMedia("(min-width: 1280px)").addEventListener("change", e => {
+      if (!e.matches) closeIsland();
+    });
+  }
+
+  // The clock is the visitor's local time. Everything day-scoped resolves
+  // "today" in the SITE timezone instead, so the countdown agrees with the
+  // server-rendered value and every visitor sees the same number.
+  function startIslandClock() {
+    const slot = document.getElementById("island-slot");
+    if (!slot) return;
+
+    const tz = slot.dataset.tz || undefined;
+    const eventKey = slot.dataset.event || "";
+    const locale = document.documentElement.lang || undefined;
+
+    const clockFmt = new Intl.DateTimeFormat(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    });
+
+    const fill = (tpl: string, days: number) =>
+      tpl.replace(/\{\{days\}\}/g, String(days));
+
+    let lastDay = "";
+
+    const tick = () => {
+      const { event, countdown } = islandEls();
+      const d = new Date();
+
+      // Both layers carry their own clock, and only one is announced at a time.
+      document
+        .querySelectorAll<HTMLElement>("[data-island-clock]")
+        .forEach(el => {
+          el.textContent = clockFmt.format(d);
+        });
+
+      // Everything below depends on the calendar day, not the second. Skipping
+      // when the key is unchanged also self-heals background-tab throttling:
+      // after a throttled gap the next tick catches up.
+      const day = dayKeyIn(tz, d);
+      if (day === lastDay) return;
+      lastDay = day;
+
+      if (event && countdown && eventKey) {
+        const days = daysUntil(eventKey, tz, d);
+        const template = countdown.dataset.template ?? "";
+        // No i18n key for "today" or "it has passed", so it steps aside.
+        const show = days !== null && days > 0 && template !== "";
+        if (show) countdown.textContent = fill(template, days);
+        event.classList.toggle("hidden", !show);
+        event.classList.toggle("flex", show);
+      }
+    };
+
+    // On `window`, not a module-scoped variable: a re-run of the module (which
+    // happens on navigation) would otherwise leak the previous interval.
+    const w = window as unknown as { __islandTimer?: number };
+    window.clearInterval(w.__islandTimer);
+    tick();
+    w.__islandTimer = window.setInterval(tick, 1000);
+  }
+
   function menuGroupHasActivePage() {
     return !!document.querySelector(
       "#menu-group-items [data-nav-path].active-nav"
@@ -1129,6 +1484,8 @@ const island =
       if (!current) return;
       const y = window.scrollY;
 
+      // The island deliberately stays put and keeps its state while scrolling;
+      // the CSS converge cap is what keeps it clear of the side islands.
       if (y > 24) current.setAttribute("data-scrolled", "");
       else current.removeAttribute("data-scrolled");
 
@@ -1202,6 +1559,23 @@ const island =
 
   setupDrawerKeyboard();
   setupDrawerBreakpoint();
+
+  setupIsland();
+  document.addEventListener("astro:after-swap", setupIsland);
+
+  startIslandClock();
+  document.addEventListener("astro:after-swap", startIslandClock);
+
+  // Reset before the swap so an open panel is not snapshotted — and so its
+  // animate-menu-in is gone before the header node is re-inserted, which would
+  // otherwise replay the entrance animation.
+  if (
+    !(window as unknown as { __islandSwapBound?: boolean }).__islandSwapBound
+  ) {
+    (window as unknown as { __islandSwapBound?: boolean }).__islandSwapBound =
+      true;
+    document.addEventListener("astro:before-swap", closeIsland);
+  }
 
   setupNavIndicator();
   document.addEventListener("astro:after-swap", setupNavIndicator);
