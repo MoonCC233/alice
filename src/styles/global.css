@@ -3,6 +3,21 @@
 @import "./typography.css";
 @import "rehype-callouts/theme/obsidian";
 @import "katex/dist/katex.min.css";
+@import "lenis/dist/lenis.css";
+
+/* Motion tokens — the single vocabulary shared by CSS and GSAP.
+   These are mirrored by EASE / DUR in src/scripts/motion.ts; the JS side
+   can't read custom properties at tween-creation time, so the two lists are
+   kept in sync by hand. */
+:root {
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 0.2s;
+  --dur-base: 0.25s;
+  --dur-mid: 0.3s;
+  --dur-slow: 0.45s;
+  --dur-slowest: 0.5s;
+}
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
@@ -53,6 +68,20 @@ html {
   scroll-padding-top: 6rem;
 }
 
+/* Lenis animates scroll itself, so the two would double-smooth every anchor
+   jump. The class is set by src/scripts/motion.ts only when Lenis is actually
+   running, leaving native smooth scrolling in place for reduced motion and
+   for the no-JS case. (Lenis' own stylesheet no longer carries this rule.) */
+html.motion-smooth {
+  scroll-behavior: auto;
+}
+
+/* Set by the splash decision script in Layout.astro before first paint, so an
+   intro that should not play is never painted and cannot flash. */
+html[data-splash="skip"] #splash {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -93,19 +122,19 @@ html {
 }
 
 .animate-header-in {
-  animation: header-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: header-in 0.4s var(--ease-out-expo) both;
 }
 
 .animate-menu-in {
-  animation: menu-in 0.25s ease-out both;
+  animation: menu-in var(--dur-base) ease-out both;
 }
 
 .animate-fade-up {
-  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fade-up var(--dur-slowest) var(--ease-out-expo) both;
 }
 
 .animate-fade-up-delayed {
-  animation: fade-up 0.5s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fade-up var(--dur-slowest) 0.12s var(--ease-out-expo) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

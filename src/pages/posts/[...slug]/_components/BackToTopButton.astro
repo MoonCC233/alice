@@ -6,12 +6,14 @@ import { useTranslations } from "@/i18n";
 const t = useTranslations(Astro.currentLocale);
 ---
 
+<!-- `opacity-0` is the pre-JS state so the button cannot flash before the
+     module script runs; the transform is owned by GSAP, deliberately not by a
+     Tailwind translate class, which would compound with GSAP's transform. -->
 <div
   id="btt-btn-container"
   class:list={[
-    "fixed inset-e-4 bottom-8 z-50",
+    "fixed inset-e-4 bottom-8 z-50 opacity-0",
     "md:sticky md:inset-e-auto md:float-end md:me-1",
-    "translate-y-14 opacity-0 transition duration-500",
   ]}
 >
   <button
@@ -35,53 +37,76 @@ const t = useTranslations(Astro.currentLocale);
   </button>
 </div>
 
-<script is:inline data-astro-rerun>
-  function backToTop() {
-    const rootElement = document.documentElement;
-    const btnContainer = document.querySelector("#btt-btn-container");
-    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
-    const progressIndicator = document.querySelector("#progress-indicator");
+<script>
+  import { gsap, dur, easeOutExpo, scrollToTop } from "@/scripts/motion";
 
-    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
-      return;
+  const HIDDEN_Y = 56;
 
-    backToTopBtn.addEventListener("click", () => {
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-    });
+  let container: HTMLElement | null = null;
+  let indicator: HTMLElement | null = null;
+  // null = not yet initialised for the current page.
+  let shown: boolean | null = null;
 
-    let lastVisible = null;
-    function handleScroll() {
-      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
-      const scrollTop = rootElement.scrollTop;
-      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+  function bind() {
+    container = document.querySelector<HTMLElement>("#btt-btn-container");
+    indicator = document.querySelector<HTMLElement>("#progress-indicator");
+    const btn = document.querySelector<HTMLElement>(
+      "[data-button='back-to-top']"
+    );
 
-      progressIndicator.style.setProperty(
-        "background-image",
-        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
-      );
+    if (!container || !indicator || !btn) return;
 
-      const isVisible = scrollTop / scrollTotal > 0.3;
+    // Every page starts at the top, so start hidden and drop any tween still
+    // finishing on the element the navigation just replaced.
+    gsap.killTweensOf(container);
+    gsap.set(container, { opacity: 0, y: HIDDEN_Y });
+    shown = false;
 
-      if (isVisible !== lastVisible) {
-        btnContainer.classList.toggle("opacity-100", isVisible);
-        btnContainer.classList.toggle("translate-y-0", isVisible);
-        btnContainer.classList.toggle("opacity-0", !isVisible);
-        btnContainer.classList.toggle("translate-y-14", !isVisible);
-        lastVisible = isVisible;
-      }
-    }
+    btn.addEventListener("click", () => scrollToTop());
+  }
 
-    let ticking = false;
-    document.addEventListener("scroll", () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
+  function handleScroll() {
+    const root = document.documentElement;
+    const scrollTotal = root.scrollHeight - root.clientHeight;
+    if (!container || !indicator || scrollTotal <= 0) return;
+
+    const scrollTop = root.scrollTop;
+    const percent = Math.floor((scrollTop / scrollTotal) * 100);
+
+    // A per-frame colour value, not an animation — written directly.
+    indicator.style.setProperty(
+      "background-image",
+      `conic-gradient(var(--accent), var(--accent) ${percent}%, transparent ${percent}%)`
+    );
+
+    const isVisible = scrollTop / scrollTotal > 0.3;
+    if (isVisible === shown) return;
+    shown = isVisible;
+
+    gsap.to(container, {
+      opacity: isVisible ? 1 : 0,
+      y: isVisible ? 0 : HIDDEN_Y,
+      duration: dur(0.5),
+      ease: easeOutExpo,
     });
   }
-  backToTop();
+
+  bind();
+  document.addEventListener("astro:after-swap", bind);
+
+  // One scroll listener for the life of the page, now that this is a bundled
+  // module script rather than an is:inline one re-run per navigation.
+  let ticking = false;
+  document.addEventListener(
+    "scroll",
+    () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        handleScroll();
+        ticking = false;
+      });
+    },
+    { passive: true }
+  );
 </script>

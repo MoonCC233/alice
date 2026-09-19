@@ -568,7 +568,14 @@ const totalMin = estimateReadingMinutes(post.body);
     );
   }
 
-  document.addEventListener("astro:after-swap", () =>
-    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
-  );
+  // Registered once: this script re-runs on every View Transition, so an
+  // unguarded addEventListener would stack a new listener per navigation.
+  if (!window.__scrollTopSwapBound) {
+    window.__scrollTopSwapBound = true;
+    // Routed through the motion module so Lenis, which owns scrolling, resets
+    // too — a bare window.scrollTo is a no-op against a Lenis-driven scroll.
+    document.addEventListener("astro:after-swap", () =>
+      window.__scrollToTop?.()
+    );
+  }
 </script>
