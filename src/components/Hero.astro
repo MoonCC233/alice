@@ -6,6 +6,7 @@ import IconMapPin from "@/assets/icons/IconMapPin.svg";
 import IconCalendar from "@/assets/icons/IconCalendar.svg";
 import Logo from "@/assets/icons/Logo.svg";
 import { getAssetPath } from "@/utils/withBase";
+import { daysSince } from "@/utils/siteAge";
 import { getYearHeatmap } from "@/utils/getPostActivity";
 import { useTranslations, tplStr } from "@/i18n";
 import config from "@/config";
@@ -43,22 +44,14 @@ const avatarUrl = hero.avatar
     : getAssetPath(hero.avatar)
   : "";
 
-// Site age ("已运行 N 天") from hero.since.
-let runningDays: number | null = null;
-if (hero.since) {
-  const since = new Date(`${hero.since}T00:00:00`);
-  if (!Number.isNaN(since.getTime())) {
-    runningDays = Math.max(
-      0,
-      Math.floor((Date.now() - since.getTime()) / 86_400_000)
-    );
-  }
-}
+// Site age ("已运行 N 天"). Resolved in the site timezone via the shared
+// helper so the hero, the footer and the header's dynamic island agree.
+const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
 ---
 
 <section
   id="hero"
- class="grid gap-10 pt-8 pb-2 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8 lg:gap-10"
+  class="grid gap-10 pt-8 pb-2 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8 lg:gap-10"
 >
   <!-- Left: avatar, intro, meta; vertically centered on desktop to balance
        the taller heatmap card on the right -->
@@ -106,7 +99,10 @@ if (hero.since) {
       {
         site.location && (
           <li class="text-muted-foreground flex items-center gap-2">
-            <IconMapPin class="text-accent size-4 shrink-0" aria-hidden="true" />
+            <IconMapPin
+              class="text-accent size-4 shrink-0"
+              aria-hidden="true"
+            />
             {site.location}
           </li>
         )
@@ -131,7 +127,9 @@ if (hero.since) {
       class="bg-background/60 card-in rounded-3xl p-5 backdrop-blur-sm sm:p-6"
     >
       <div class="flex items-baseline justify-between gap-3">
-        <p class="flex items-baseline gap-2 text-base font-semibold tracking-wide">
+        <p
+          class="flex items-baseline gap-2 text-base font-semibold tracking-wide"
+        >
           {t.hero.heatmapTitle}
           <span class="text-muted-foreground text-xs font-normal">
             {tplStr(t.hero.heatmapWindow, { year: heat.year })}
@@ -151,9 +149,7 @@ if (hero.since) {
           aria-hidden="true"
           class="heat-labels text-muted-foreground text-center text-[10px] leading-none"
         >
-          {Array.from({ length: 12 }, (_, i) => (
-            <span>{i + 1}</span>
-          ))}
+          {Array.from({ length: 12 }, (_, i) => <span>{i + 1}</span>)}
         </div>
 
         <!-- 12 month columns × 4 week rows, row-major order -->
@@ -253,9 +249,7 @@ if (hero.since) {
     if (!grid || grid.dataset.tipBound === "true") return;
     grid.dataset.tipBound = "true";
 
-    let tip = document.getElementById(
-      "hero-heat-tip"
-    ) as HTMLDivElement | null;
+    let tip = document.getElementById("hero-heat-tip") as HTMLDivElement | null;
     if (!tip) {
       tip = document.createElement("div");
       tip.id = "hero-heat-tip";
@@ -306,7 +300,9 @@ if (hero.since) {
     };
 
     grid.addEventListener("pointerover", e => {
-      const cell = (e.target as HTMLElement).closest<HTMLElement>("[data-count]");
+      const cell = (e.target as HTMLElement).closest<HTMLElement>(
+        "[data-count]"
+      );
       if (!cell || !tip) return;
       syncText(cell);
       // First show: place instantly (no glide from the old position).
@@ -323,7 +319,9 @@ if (hero.since) {
       }
     });
     grid.addEventListener("pointermove", e => {
-      const cell = (e.target as HTMLElement).closest<HTMLElement>("[data-count]");
+      const cell = (e.target as HTMLElement).closest<HTMLElement>(
+        "[data-count]"
+      );
       if (!cell || !tip || tip.style.opacity !== "1") return;
       syncText(cell);
       moveTo(cell, e.clientX);

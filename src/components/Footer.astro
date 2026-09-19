@@ -3,6 +3,7 @@ import type { HTMLAttributes } from "astro/types";
 import { getCollection } from "astro:content";
 import Socials from "./Socials.astro";
 import { getAssetPath } from "@/utils/withBase";
+import { daysSince } from "@/utils/siteAge";
 import { useTranslations, tplStr } from "@/i18n";
 import config from "@/config";
 
@@ -31,12 +32,8 @@ const published = posts.filter(post => !post.data.draft);
 const postCount = published.length;
 const tagCount = new Set(published.flatMap(post => post.data.tags ?? [])).size;
 
-// 建站天数
-const since = hero?.since ? new Date(hero.since) : null;
-const runningDays =
-  since && !Number.isNaN(since.getTime())
-    ? Math.max(0, Math.floor((now.getTime() - since.getTime()) / 86_400_000))
-    : null;
+// 建站天数。按站点时区算，与 Hero 和顶栏灵动岛保持一致
+const runningDays = hero?.since ? daysSince(hero.since, site.timezone) : null;
 
 // 服务端先渲染一份初始时间，客户端脚本会实时更新
 const datetimeFormatter = new Intl.DateTimeFormat(locale, {
@@ -67,7 +64,9 @@ const initialDatetime = datetimeFormatter.format(now);
 
       {/* 站点信息 */}
       <div class="text-center sm:text-left">
-        <p class="text-muted-foreground mb-3 text-xs font-semibold tracking-widest uppercase">
+        <p
+          class="text-muted-foreground mb-3 text-xs font-semibold tracking-widest uppercase"
+        >
           {t.footer.siteInfo}
         </p>
         <ul class="text-muted-foreground space-y-2 text-sm">
@@ -84,7 +83,9 @@ const initialDatetime = datetimeFormatter.format(now);
               class="hover:text-accent inline-flex items-center gap-1 transition-colors"
             >
               RSS
-              <span class="bg-accent/15 text-accent rounded px-1 py-px text-[10px] font-semibold uppercase">
+              <span
+                class="bg-accent/15 text-accent rounded px-1 py-px text-[10px] font-semibold uppercase"
+              >
                 XML
               </span>
               <span class="sr-only">{t.a11y.rssFeed}</span>
@@ -108,7 +109,9 @@ const initialDatetime = datetimeFormatter.format(now);
     <div
       class="border-border text-muted-foreground mt-8 flex flex-col items-center justify-between gap-2 border-t border-dashed pt-4 text-xs sm:flex-row"
     >
-      <p class="flex flex-wrap items-center justify-center gap-x-1 whitespace-nowrap">
+      <p
+        class="flex flex-wrap items-center justify-center gap-x-1 whitespace-nowrap"
+      >
         <span>{t.footer.copyright} &#169; {currentYear}</span>
         {
           site.profile ? (

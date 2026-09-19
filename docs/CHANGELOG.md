@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - TOC scrollspy not initializing when the article page is loaded directly
 - TOC anchor jump misalignment caused by a doubled scroll offset
 - Reduced-motion users still got the post title's View Transition morph. `prefers-reduced-motion` now also cancels `::view-transition-group`/`-old`/`-new`, which lands the morphed element at its destination immediately. The theme-switch circular reveal is unaffected — it drives its clip-path through the Web Animations API, which a CSS `animation: none` does not touch
+- The hero and footer could disagree on "已运行 N 天". `Hero.astro` parsed `hero.since` as local midnight while `Footer.astro` parsed it as UTC midnight, so in Asia/Shanghai they differed by a day for the first eight hours of every day — and the hero's result also depended on the build machine's timezone. Both now go through a new `src/utils/siteAge.ts`, which does calendar-day arithmetic in `site.timezone` (a config value that was previously unused)
 
 ### Changed
 
