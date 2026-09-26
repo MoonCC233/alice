@@ -32,7 +32,7 @@ export default defineAstroPaperConfig({
     role: "[全干工程师 / 技术博主]",
     avatar:
       "https://q.qlogo.cn/headimg_dl?dst_uin=1721299119&spec=640&img_type=jpg",
-    since: "2025-05-07",
+    since: "2026-09-10",
     event: { name: "中秋节", date: "2026-09-25" },
   },
   socials: [

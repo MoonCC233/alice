@@ -1,5 +1,4 @@
 ---
-
 import { ClientRouter } from "astro:transitions";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import Footer from "@/components/Footer.astro";
@@ -44,8 +43,6 @@ const rssHref = getAssetPath("rss.xml");
     <link rel="icon" href={getAssetPath("favicon.ico")} />
     <link rel="canonical" href={canonicalURL} />
     <meta name="generator" content={Astro.generator} />
-
-
 
     <!-- Primary meta -->
     <title>{title}</title>
@@ -109,11 +106,46 @@ const rssHref = getAssetPath("rss.xml");
       })();
     </script>
 
+    <!-- Decide before first paint so a returning visitor never sees a flash of
+         the intro that should be skipped. -->
+    <script is:inline>
+      (function () {
+        const root = document.documentElement;
+        const reducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+        let shouldPlay = !reducedMotion;
+
+        try {
+          shouldPlay =
+            shouldPlay && sessionStorage.getItem("alice-splash-seen") !== "1";
+        } catch {
+          // Play once per load when session storage is unavailable.
+        }
+
+        root.setAttribute("data-splash", shouldPlay ? "play" : "skip");
+      })();
+    </script>
+
     <ClientRouter />
   </head>
   <body
     class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
   >
+    <div id="splash" aria-hidden="true" data-phase="idle">
+      <div class="splash-wipe" aria-hidden="true"></div>
+      <div class="splash-content">
+        <span class="splash-eyebrow">PERSONAL KNOWLEDGE BASE</span>
+        <strong class="splash-title">{site.title}</strong>
+        <span class="splash-subtitle">
+          {config.hero.role || site.description}
+        </span>
+      </div>
+      <div class="splash-rule" aria-hidden="true">
+        <span></span>
+      </div>
+    </div>
+
     <Header />
 
     {breadcrumb && <Breadcrumb />}
@@ -125,6 +157,35 @@ const rssHref = getAssetPath("rss.xml");
     </div>
 
     <Footer />
+
+    <script is:inline>
+      (function () {
+        const splash = document.getElementById("splash");
+        const root = document.documentElement;
+        if (!splash || root.dataset.splash !== "play") return;
+
+        const finish = () => {
+          splash.dataset.phase = "exit";
+          window.setTimeout(() => {
+            root.setAttribute("data-splash", "skip");
+            splash.remove();
+            try {
+              sessionStorage.setItem("alice-splash-seen", "1");
+            } catch {
+              // The animation still completes when session storage is blocked.
+            }
+          }, 760);
+        };
+
+        window.requestAnimationFrame(() => {
+          splash.dataset.phase = "wipe";
+          window.setTimeout(() => {
+            splash.dataset.phase = "solid";
+          }, 760);
+          window.setTimeout(finish, 1700);
+        });
+      })();
+    </script>
 
     <script>
       import "@/scripts/theme";

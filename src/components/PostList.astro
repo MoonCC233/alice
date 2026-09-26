@@ -16,7 +16,7 @@ const { posts, variant } = Astro.props;
   <div
     id="post-list-glow"
     aria-hidden="true"
-    class="post-list-glow pointer-events-none absolute -inset-x-3 top-0 z-0 rounded-2xl opacity-0 transition-[opacity,transform,height] duration-300 ease-out"
+    class="post-list-glow pointer-events-none absolute -inset-x-4 top-0 z-0 rounded-md opacity-0 transition-[opacity,transform,height] duration-300 ease-out"
   >
   </div>
   {posts.map(data => <Card variant={variant} {...data} />)}
@@ -60,7 +60,8 @@ const { posts, variant } = Astro.props;
 
 <style>
   .post-list-glow {
-    background: color-mix(in oklab, var(--accent) 8%, transparent);
+    background: color-mix(in srgb, var(--foreground) 5%, transparent);
+    border-inline-start: 2px solid var(--foreground);
     will-change: transform, height;
   }
 </style>

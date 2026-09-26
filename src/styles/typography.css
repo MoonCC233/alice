@@ -11,10 +11,22 @@
     h4,
     th {
       @apply text-foreground mb-3;
+      text-wrap: balance;
     }
 
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+    h2 {
+      font-size: clamp(1.45rem, 3vw, 2.1rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
     h3 {
-      @apply italic;
+      font-size: 1.25rem;
+      line-height: 1.25;
     }
 
     p,
@@ -27,8 +39,15 @@
       @apply text-foreground;
     }
 
+    p {
+      width: 100%;
+      max-width: none;
+      text-wrap: pretty;
+    }
+
     a {
-      @apply text-foreground hover:text-accent wrap-break-word decoration-dashed underline-offset-4 focus-visible:no-underline;
+      @apply text-foreground hover:text-foreground/70 wrap-break-word underline-offset-4 focus-visible:no-underline;
+      text-decoration-thickness: 1px;
     }
 
     ul {
@@ -36,7 +55,7 @@
     }
 
     li {
-      @apply marker:text-accent;
+      @apply marker:text-foreground;
     }
 
     hr {
@@ -45,6 +64,11 @@
 
     img {
       @apply border-border mx-auto border;
+      transition: transform 500ms var(--ease-out-expo);
+    }
+
+    img:hover {
+      transform: scale(1.01);
     }
 
     img[role="button"] {
@@ -94,7 +118,9 @@
     }
 
     blockquote {
-      @apply border-s-accent/80 wrap-break-word opacity-80;
+      @apply border-s-foreground wrap-break-word;
+      background: color-mix(in srgb, var(--muted) 55%, transparent);
+      opacity: 0.9;
     }
 
     details:not(.callout) {
@@ -107,6 +133,8 @@
 
     pre {
       @apply focus-visible:outline-accent focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-dashed;
+      border: 1px solid var(--border);
+      box-shadow: 0 14px 35px rgb(var(--shadow-color) / 0.07);
     }
   }
 

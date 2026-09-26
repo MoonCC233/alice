@@ -39,7 +39,6 @@ const gradientOf = (name: string) => {
   breadcrumb
 >
   <Main pageTitle={t.pages.linksTitle} pageDesc={t.pages.linksDesc}>
-
     <div class="grid gap-10 lg:grid-cols-[280px_1fr]">
       {/* 左侧展示区（无边框）：头像 + 网站信息 / 下方首页截图 */}
       <div id="friend-preview" class="space-y-5 self-start lg:sticky lg:top-24">
@@ -50,12 +49,15 @@ const gradientOf = (name: string) => {
             alt={featured.name}
             width="64"
             height="64"
-            class:list={["size-16 flex-none rounded-2xl object-cover", { hidden: !featured.avatar }]}
+            class:list={[
+              "size-16 flex-none rounded-lg object-cover",
+              { hidden: !featured.avatar },
+            ]}
           />
           <span
             id="fp-avatar-initial"
             class:list={[
-              "grid size-16 flex-none place-items-center rounded-2xl text-2xl font-bold text-white",
+              "bg-foreground text-background grid size-16 flex-none place-items-center rounded-lg text-2xl font-bold",
               { hidden: !!featured.avatar },
             ]}
             style={`background:${gradientOf(featured.name)}`}
@@ -64,7 +66,7 @@ const gradientOf = (name: string) => {
             {featured.name.charAt(0).toUpperCase()}
           </span>
           <div class="min-w-0">
-            <p id="fp-name" class="text-accent truncate text-lg font-bold">
+            <p id="fp-name" class="text-foreground truncate text-lg font-bold">
               {featured.name}
             </p>
             <p
@@ -77,7 +79,9 @@ const gradientOf = (name: string) => {
         </div>
 
         {/* 首页截图（缓慢 Ken Burns 动画） */}
-        <span class="bg-muted relative block aspect-[16/10] overflow-hidden rounded-2xl shadow-sm">
+        <span
+          class="surface-panel relative block aspect-[16/10] overflow-hidden rounded-lg shadow-sm"
+        >
           <span
             id="fp-placeholder"
             class="absolute inset-0 grid place-items-center text-3xl font-bold text-white/80 select-none"
@@ -99,7 +103,9 @@ const gradientOf = (name: string) => {
       </div>
 
       {/* 友链列表：自适应列数，无边框卡片 */}
-      <ul class="grid content-start gap-3 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+      <ul
+        class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] content-start gap-3"
+      >
         {
           friends.map(friend => {
             const initial = friend.name.charAt(0).toUpperCase();
@@ -116,7 +122,7 @@ const gradientOf = (name: string) => {
                   data-gradient={gradientOf(friend.name)}
                   data-shot={screenshotOf(friend)}
                   data-avatar={friend.avatar ?? ""}
-                  class="group bg-muted/40 hover:bg-accent/10 relative flex h-full items-center gap-3.5 overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5"
+                  class="group surface-panel hover:bg-foreground hover:text-background relative flex h-full items-center gap-3.5 overflow-hidden rounded-lg p-4 transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* 在线状态点（装饰） */}
                   <span
@@ -131,22 +137,22 @@ const gradientOf = (name: string) => {
                       width="48"
                       height="48"
                       loading="lazy"
-                      class="size-12 flex-none rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
+                      class="size-12 flex-none rounded-md object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
-                    <span class="bg-background text-muted-foreground grid size-12 flex-none place-items-center rounded-xl text-lg font-semibold transition-transform duration-300 group-hover:scale-105">
+                    <span class="bg-muted text-muted-foreground group-hover:bg-background group-hover:text-foreground grid size-12 flex-none place-items-center rounded-md text-lg font-semibold transition-transform duration-300 group-hover:scale-105">
                       {initial}
                     </span>
                   )}
 
                   <span class="min-w-0 flex-1">
-                    <span class="text-foreground group-hover:text-accent block truncate text-sm font-semibold transition-colors">
+                    <span class="text-foreground group-hover:text-background block truncate text-sm font-semibold transition-colors">
                       {friend.name}
                     </span>
-                    <span class="text-muted-foreground block truncate text-[11px] tabular-nums">
+                    <span class="text-muted-foreground group-hover:text-background/70 block truncate text-[11px] tabular-nums">
                       {domainOf(friend.url)}
                     </span>
-                    <span class="text-muted-foreground mt-1 block truncate text-xs">
+                    <span class="text-muted-foreground group-hover:text-background/70 mt-1 block truncate text-xs">
                       {friend.desc}
                     </span>
                   </span>
@@ -162,7 +168,7 @@ const gradientOf = (name: string) => {
       {t.pages.linksApply}
       <a
         href={getRelativeLocaleUrl(locale, "about")}
-        class="text-accent hover:underline"
+        class="text-foreground hover:underline"
       >
         {t.nav.about}
       </a>
@@ -182,12 +188,19 @@ const gradientOf = (name: string) => {
     const name = document.getElementById("fp-name");
     const domain = document.getElementById("fp-domain");
     const avatarImg = document.getElementById(
-      "fp-avatar-img",
+      "fp-avatar-img"
     ) as HTMLImageElement | null;
     const avatarInitial = document.getElementById("fp-avatar-initial");
     const placeholder = document.getElementById("fp-placeholder");
     const shot = document.getElementById("fp-shot") as HTMLImageElement | null;
-    if (!name || !domain || !avatarImg || !avatarInitial || !placeholder || !shot) {
+    if (
+      !name ||
+      !domain ||
+      !avatarImg ||
+      !avatarInitial ||
+      !placeholder ||
+      !shot
+    ) {
       return;
     }
     panel.dataset.previewBound = "true";
@@ -214,10 +227,10 @@ const gradientOf = (name: string) => {
       shot.src = d.shot ?? "";
 
       // 切换淡入动画
-      panel.animate?.(
-        [{ opacity: 0.35 }, { opacity: 1 }],
-        { duration: 260, easing: "ease-out" },
-      );
+      panel.animate?.([{ opacity: 0.35 }, { opacity: 1 }], {
+        duration: 260,
+        easing: "ease-out",
+      });
     };
 
     document.querySelectorAll<HTMLElement>("[data-friend]").forEach(card => {
@@ -228,4 +241,3 @@ const gradientOf = (name: string) => {
   initFriendPreview();
   document.addEventListener("astro:after-swap", initFriendPreview);
 </script>
-

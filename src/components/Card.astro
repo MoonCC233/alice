@@ -20,13 +20,15 @@ const coverUrl = getCoverUrl(cover);
 
 <!-- The flex row is an inner div, never the <li>: `display: flex` on an <li>
      drops its listitem role in Blink and #post-list would lose its semantics. -->
-<li class="group relative my-6">
-  <div class="flex items-start gap-4">
+<li
+  class="group border-border relative my-0 border-b py-5 first:pt-0 last:border-b-0"
+>
+  <div class="flex items-start gap-5">
     {
       coverUrl && (
         <span
           style={{ viewTransitionName: toCoverTransitionName(id) }}
-          class="bg-muted block aspect-[16/10] w-28 flex-none overflow-hidden rounded-xl sm:w-36"
+          class="bg-muted border-border block aspect-[16/10] w-28 flex-none overflow-hidden rounded-md border sm:w-40"
         >
           {/* The name is on this wrapper, not the img: ClientRouter does not
               wait for images before snapshotting, so a named <img> can capture
@@ -38,7 +40,7 @@ const coverUrl = getCoverUrl(cover);
             width="640"
             height="400"
             loading="lazy"
-            class="size-full object-cover"
+            class="size-full object-cover transition duration-500 group-hover:scale-[1.04]"
           />
         </span>
       )
@@ -51,21 +53,25 @@ const coverUrl = getCoverUrl(cover);
       <a
         href={getPostUrl(id, filePath, Astro.currentLocale)}
         class:list={[
-          "text-accent inline-block text-lg font-medium",
-          "decoration-dashed underline-offset-4 group-hover:underline",
+          "text-foreground inline-block text-lg leading-tight font-semibold",
+          "underline-offset-4 group-hover:underline",
           "transition-colors duration-200",
           "focus-visible:no-underline focus-visible:underline-offset-0",
         ]}
       >
         <Heading
           transition:name={toTransitionName(id)}
-          class="transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+          class="transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
         >
           {title}
         </Heading>
       </a>
       <Datetime {...props} />
-      <p class="text-muted-foreground mt-1">{description}</p>
+      <p
+        class="text-muted-foreground mt-2 line-clamp-2 text-[15px] leading-relaxed"
+      >
+        {description}
+      </p>
     </div>
   </div>
 </li>

@@ -36,53 +36,92 @@ const items = tocItems.map(h => {
       <nav
         id="toc-desktop"
         aria-label={t.post.toc}
-        class="animate-toc-in fixed top-28 z-30 hidden w-56 xl:block 2xl:w-64"
-        style={{ left: "calc(50% + 26rem)" }}
+        data-toc-total={items.length}
+        class="toc-shell fixed z-30 hidden lg:block"
       >
-        <p class="text-muted-foreground mb-2 text-xs font-semibold tracking-widest uppercase">
-          {t.post.toc}
-        </p>
-        <ul class="max-h-[65vh] space-y-0.5 overflow-y-auto pe-1">
-          {items.map(h => (
-            <li>
-              <a
-                href={`#${h.slug}`}
-                data-toc-link={h.slug}
-                class:list={["toc-row", { "toc-row-sub": h.isSub }]}
-              >
-                {h.isSub ? (
-                  <span class="toc-dot" aria-hidden="true" />
-                ) : (
-                  <span class="toc-badge" aria-hidden="true">
-                    {h.num}
-                  </span>
-                )}
-                {h.isSub && (
-                  <span class="toc-subnum" aria-hidden="true">
-                    {h.num}
-                  </span>
-                )}
-                <span class="toc-text">{h.text}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div class="toc-heading">
+          <div class="toc-heading-copy min-w-0">
+            <p class="text-muted-foreground text-[10px] font-semibold tracking-[0.16em] uppercase">
+              {t.post.toc}
+            </p>
+            <p
+              class="toc-current mt-1 truncate text-xs font-medium"
+              data-toc-current
+            >
+              {items[0]?.text}
+            </p>
+          </div>
+          <span class="toc-count tabular-nums" data-toc-count>
+            01 / {String(items.length).padStart(2, "0")}
+          </span>
+        </div>
+        <div id="toc-desktop-list" class="toc-content">
+          <div class="toc-meter" aria-hidden="true">
+            <span data-toc-meter />
+          </div>
+          <ul class="toc-list max-h-[62vh] overflow-y-auto pe-1">
+            {items.map((h, index) => (
+              <li>
+                <a
+                  href={`#${h.slug}`}
+                  data-toc-link={h.slug}
+                  data-toc-index={index}
+                  class:list={["toc-row", { "toc-row-sub": h.isSub }]}
+                >
+                  {h.isSub ? (
+                    <span class="toc-dot" aria-hidden="true" />
+                  ) : (
+                    <span class="toc-badge" aria-hidden="true">
+                      {h.num}
+                    </span>
+                  )}
+                  {h.isSub && (
+                    <span class="toc-subnum" aria-hidden="true">
+                      {h.num}
+                    </span>
+                  )}
+                  <span class="toc-text">{h.text}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
 
       {/* Mobile: collapsible TOC above the article */}
       <details
         id="toc-mobile"
-        class="animate-fade-up border-border bg-muted/40 mt-6 mb-6 rounded-lg border xl:hidden"
+        class="toc-mobile animate-fade-up mt-6 mb-6 lg:hidden"
       >
-        <summary class="flex cursor-pointer items-center justify-between px-4 py-2.5 font-medium select-none">
-          {t.post.toc}
+        <summary class="toc-mobile-summary flex cursor-pointer items-center justify-between gap-4 select-none">
+          <span class="min-w-0">
+            <span class="text-muted-foreground block text-[10px] font-semibold tracking-[0.16em] uppercase">
+              {t.post.toc}
+            </span>
+            <span
+              class="mt-1 block truncate text-sm font-semibold"
+              data-toc-current
+            >
+              {items[0]?.text}
+            </span>
+          </span>
+          <span class="toc-mobile-meta">
+            <span class="toc-count tabular-nums" data-toc-count>
+              01 / {String(items.length).padStart(2, "0")}
+            </span>
+            <span class="toc-chevron" aria-hidden="true" />
+          </span>
         </summary>
-        <ul class="border-border space-y-0.5 border-t px-3 py-2">
-          {items.map(h => (
+        <div class="toc-mobile-meter toc-meter" aria-hidden="true">
+          <span data-toc-meter />
+        </div>
+        <ul class="toc-list border-border border-t px-3 py-3">
+          {items.map((h, index) => (
             <li>
               <a
                 href={`#${h.slug}`}
                 data-toc-link={h.slug}
+                data-toc-index={index}
                 class:list={["toc-row", { "toc-row-sub": h.isSub }]}
               >
                 {h.isSub ? (
@@ -108,53 +147,122 @@ const items = tocItems.map(h => {
 }
 
 <style>
-  /* Entrance animation (desktop side TOC) */
-  @keyframes toc-in {
-    from {
-      opacity: 0;
-      transform: translateX(0.75rem);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
-  .animate-toc-in {
-    animation: toc-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .animate-toc-in {
-      animation: none;
-    }
-  }
-
   .toc-row {
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr);
     align-items: center;
     gap: 0.5rem;
-    border-radius: 0.5rem;
+    min-height: 2rem;
+    border: 1px solid transparent;
+    border-radius: 0.625rem;
     padding-block: 0.375rem;
-    padding-inline-start: 1rem;
-    padding-inline-end: 0.5rem;
-    font-size: 0.8125rem;
+    padding-inline: 0.5rem;
+    font-size: 0.75rem;
     line-height: 1.45;
     color: var(--muted-foreground);
     transition:
       color 0.2s ease,
-      background-color 0.2s ease;
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
   }
 
-  /* Segmented progress bar: one tick per row */
+  .toc-shell {
+    top: 50%;
+    right: auto;
+    left: max(
+      0.75rem,
+      calc(
+        50% - var(--reader-half-width) - var(--reader-layout-gap) -
+          var(--reader-rail-width) - var(--reader-layout-gap) -
+          var(--reader-toc-width)
+      )
+    );
+    width: var(--reader-toc-width);
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: 0 18px 44px rgb(var(--shadow-color) / 0.08);
+    backdrop-filter: blur(18px);
+    transform: translateY(-50%);
+    transform-origin: left center;
+    transition:
+      opacity 220ms var(--ease-out-expo),
+      transform 260ms var(--ease-out-expo),
+      visibility 0s linear 0s,
+      left 320ms var(--ease-out-expo),
+      background-color 180ms ease;
+  }
+
+  .toc-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-inline: 0.125rem;
+  }
+
+  .toc-content {
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 160ms ease;
+  }
+
+  .toc-shell[data-collapsed] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%) translateX(1rem);
+    visibility: hidden;
+    transition-delay: 0s, 0s, 260ms, 0s, 0s;
+  }
+
+  .toc-current {
+    max-width: 7.5rem;
+    color: var(--foreground);
+  }
+
+  .toc-count {
+    flex: none;
+    color: var(--muted-foreground);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  .toc-meter {
+    position: relative;
+    height: 2px;
+    margin: 0.625rem 0.125rem 0.5rem;
+    overflow: hidden;
+    border-radius: 9999px;
+    background: var(--muted);
+  }
+
+  .toc-meter > span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--foreground);
+    transition: width 0.35s var(--ease-out-expo);
+  }
+
+  .toc-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* A quiet progress rail keeps the active state legible without relying on
+     an accent colour. */
   .toc-row::before {
     content: "";
     position: absolute;
-    inset-inline-start: 0;
-    top: 0.3125rem;
-    bottom: 0.3125rem;
-    width: 2px;
+    inset-inline-start: 0.125rem;
+    top: 0.625rem;
+    bottom: 0.625rem;
+    width: 1px;
     border-radius: 9999px;
     background: var(--border);
     transition:
@@ -165,32 +273,34 @@ const items = tocItems.map(h => {
 
   /* Sections already read: partially lit */
   .toc-row[data-passed]::before {
-    background: color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: color-mix(in srgb, var(--foreground) 45%, var(--border));
   }
 
   /* Current section: fully lit with a soft glow */
   .toc-row[data-active]::before {
     background: var(--accent);
-    box-shadow: 0 0 8px 0 color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow: 0 0 8px 0 rgb(var(--shadow-color) / 0.2);
     transform: scaleY(1.15);
   }
 
   .toc-row:hover {
     color: var(--foreground);
     background: var(--muted);
+    transform: translateX(0.125rem);
   }
 
   /* Sub-level (h3): indented, bullet + hierarchical number */
   .toc-row-sub {
-    padding-inline-start: 1.75rem;
+    grid-template-columns: 0.375rem auto minmax(0, 1fr);
+    padding-inline-start: 1.5rem;
     gap: 0.375rem;
-    font-size: 0.78125rem;
+    font-size: 0.71875rem;
   }
 
   .toc-dot {
     flex: none;
-    width: 0.3125rem;
-    height: 0.3125rem;
+    width: 0.375rem;
+    height: 0.375rem;
     border-radius: 9999px;
     background: var(--border);
     transition: background-color 0.2s ease;
@@ -230,70 +340,163 @@ const items = tocItems.map(h => {
     white-space: nowrap;
   }
 
-  /* Active row: highlighted pill + filled badge */
+  /* Active row: inverted surface gives the directory a clear anchor. */
   a[data-active] {
-    color: var(--foreground);
-    background: var(--muted);
+    color: var(--background);
+    background: var(--foreground);
     font-weight: 500;
+    border-color: var(--foreground);
   }
 
   a[data-active] .toc-badge {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--background);
+    background: var(--background);
+    border-color: var(--background);
+    color: var(--foreground);
     transform: scale(1.08);
   }
 
   a[data-active] .toc-dot {
-    background: var(--accent);
+    background: var(--background);
   }
 
   a[data-active] .toc-subnum {
-    color: var(--accent);
+    color: var(--background);
     opacity: 1;
   }
 
-  /* Mobile collapsible TOC */
+  .toc-mobile {
+    border: 1px solid var(--border);
+    border-radius: 0.875rem;
+    background: color-mix(in srgb, var(--surface) 90%, transparent);
+    box-shadow: 0 14px 30px rgb(var(--shadow-color) / 0.06);
+    backdrop-filter: blur(18px);
+  }
+
+  .toc-mobile-summary {
+    min-height: 4.5rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .toc-mobile-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex: none;
+  }
+
+  .toc-chevron {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-inline-end: 1.5px solid currentColor;
+    border-block-end: 1.5px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.2s ease;
+  }
+
+  #toc-mobile[open] .toc-chevron {
+    transform: rotate(225deg) translate(-1px, -1px);
+  }
+
+  .toc-mobile-meter {
+    margin: 0 1rem 0.125rem;
+  }
+
   #toc-mobile summary::-webkit-details-marker {
     display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toc-shell,
+    .toc-row,
+    .toc-meter > span,
+    .toc-chevron {
+      transition: none;
+    }
   }
 </style>
 
 <script is:inline data-astro-rerun>
   /** Scrollspy: highlight the TOC entry of the section currently in view. */
   function initTocScrollSpy() {
-    const links = Array.from(
-      document.querySelectorAll("[data-toc-link]")
-    );
+    const links = Array.from(document.querySelectorAll("[data-toc-link]"));
     if (links.length === 0) return;
 
-    const headingEls = links
-      .map(link => document.getElementById(link.dataset.tocLink))
-      .filter(Boolean);
+    const headingEls = Array.from(
+      new Map(
+        links
+          .map(link => document.getElementById(link.dataset.tocLink))
+          .filter(Boolean)
+          .map(heading => [heading.id, heading])
+      ).values()
+    );
 
     if (headingEls.length === 0) return;
 
-    let activeId = headingEls[0].id;
+    let activeId = "";
     let ticking = false;
+    const totalItems = Number(
+      document.querySelector("[data-toc-total]")?.dataset.tocTotal ??
+        headingEls.length
+    );
+    const desktopToc = document.getElementById("toc-desktop");
+
+    function setTocCollapsed(collapsed) {
+      desktopToc?.toggleAttribute("data-collapsed", collapsed);
+      document
+        .querySelectorAll('[data-action="toggle-toc"]')
+        .forEach(button =>
+          button.setAttribute("aria-expanded", String(!collapsed))
+        );
+    }
+
+    window.addEventListener("reading:toggle-toc", () => {
+      if (desktopToc && window.matchMedia("(min-width: 1024px)").matches) {
+        setTocCollapsed(!desktopToc.hasAttribute("data-collapsed"));
+        return;
+      }
+      const mobileToc = document.getElementById("toc-mobile");
+      if (mobileToc instanceof HTMLDetailsElement) {
+        mobileToc.open = !mobileToc.open;
+      }
+    });
 
     // Segmented progress: mark `id` as active, sections above as passed,
     // then keep the active row visible inside the scrollable TOC list.
     function setActive(id) {
       activeId = id;
       const curIdx = headingEls.findIndex(el => el.id === id);
+      const currentLink = links.find(link => link.dataset.tocLink === id);
+      const currentLabel = currentLink?.querySelector(".toc-text")?.textContent;
+      const progress =
+        headingEls.length <= 1 ? 100 : (curIdx / (headingEls.length - 1)) * 100;
       for (const link of links) {
         const idx = headingEls.findIndex(el => el.id === link.dataset.tocLink);
         if (idx === curIdx) {
           link.setAttribute("data-active", "");
+          link.setAttribute("aria-current", "location");
           link.removeAttribute("data-passed");
         } else if (idx < curIdx) {
           link.removeAttribute("data-active");
+          link.removeAttribute("aria-current");
           link.setAttribute("data-passed", "");
         } else {
           link.removeAttribute("data-active");
+          link.removeAttribute("aria-current");
           link.removeAttribute("data-passed");
         }
       }
+      document.querySelectorAll("[data-toc-current]").forEach(node => {
+        node.textContent = currentLabel ?? "";
+      });
+      document.querySelectorAll("[data-focus-current]").forEach(node => {
+        node.textContent = currentLabel ?? "";
+      });
+      document.querySelectorAll("[data-toc-count]").forEach(node => {
+        node.textContent = `${String(curIdx + 1).padStart(2, "0")} / ${String(totalItems).padStart(2, "0")}`;
+      });
+      document.querySelectorAll("[data-toc-meter]").forEach(node => {
+        node.style.width = `${progress}%`;
+      });
       // `block: "nearest"` only scrolls the TOC list when the active row is
       // outside it — the fixed nav never triggers page scrolling.
       links

@@ -51,7 +51,7 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
 
 <section
   id="hero"
-  class="grid gap-10 pt-8 pb-2 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8 lg:gap-10"
+  class="border-border relative grid gap-10 border-y py-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8 lg:gap-14 lg:py-16"
 >
   <!-- Left: avatar, intro, meta; vertically centered on desktop to balance
        the taller heatmap card on the right -->
@@ -65,10 +65,10 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
             width="96"
             height="96"
             loading="eager"
-            class="border-border size-20 flex-none rounded-2xl border object-cover sm:size-24"
+            class="border-border size-20 flex-none rounded-lg border object-cover transition duration-500 sm:size-24"
           />
         ) : (
-          <span class="border-border bg-muted/50 grid size-20 flex-none place-items-center rounded-2xl border sm:size-24">
+          <span class="border-border bg-muted/50 grid size-20 flex-none place-items-center rounded-lg border sm:size-24">
             <Logo class="size-12" aria-hidden="true" />
           </span>
         )
@@ -86,21 +86,21 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
     </div>
 
     <p
-      class="text-muted-foreground animate-fade-up mt-5 text-[15px] leading-relaxed"
+      class="text-muted-foreground animate-fade-up mt-6 max-w-xl text-[15px] leading-relaxed"
       style="animation-delay:0.08s"
     >
       {site.description}
     </p>
 
     <ul
-      class="animate-fade-up mt-5 space-y-2.5 text-sm"
+      class="animate-fade-up mt-6 grid gap-2 text-sm sm:grid-cols-2"
       style="animation-delay:0.14s"
     >
       {
         site.location && (
           <li class="text-muted-foreground flex items-center gap-2">
             <IconMapPin
-              class="text-accent size-4 shrink-0"
+              class="text-foreground size-4 shrink-0"
               aria-hidden="true"
             />
             {site.location}
@@ -111,7 +111,7 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
         runningDays !== null && (
           <li class="text-muted-foreground flex items-center gap-2">
             <IconCalendar
-              class="text-accent size-4 shrink-0"
+              class="text-foreground size-4 shrink-0"
               aria-hidden="true"
             />
             {tplStr(t.hero.siteRunning, { days: runningDays })}
@@ -123,19 +123,17 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
 
   <!-- Right: update heatmap + stats -->
   <div class="min-w-0">
-    <div
-      class="bg-background/60 card-in rounded-3xl p-5 backdrop-blur-sm sm:p-6"
-    >
+    <div class="surface-panel card-in rounded-xl p-5 sm:p-7">
       <div class="flex items-baseline justify-between gap-3">
         <p
-          class="flex items-baseline gap-2 text-base font-semibold tracking-wide"
+          class="flex items-baseline gap-2 text-sm font-semibold tracking-[0.08em] uppercase"
         >
           {t.hero.heatmapTitle}
           <span class="text-muted-foreground text-xs font-normal">
             {tplStr(t.hero.heatmapWindow, { year: heat.year })}
           </span>
         </p>
-        <span class="text-accent text-xs font-medium">
+        <span class="text-muted-foreground text-xs font-medium tabular-nums">
           {tplStr(t.hero.updatesCount, { count: heat.yearEvents })}
         </span>
       </div>
@@ -167,8 +165,8 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
             heatCells.map(({ month, week, count, delay }) => (
               <span
                 class:list={[
-                  "heat-cell rounded-[4px]",
-                  count === 0 ? "bg-muted" : "bg-accent",
+                  "heat-cell rounded-[2px]",
+                  count === 0 ? "bg-muted" : "bg-foreground",
                 ]}
                 style={`animation-delay:${delay}ms${count > 0 ? `;opacity:${OPACITIES[Math.min(count, 4) - 1]}` : ""}`}
                 data-month={month + 1}

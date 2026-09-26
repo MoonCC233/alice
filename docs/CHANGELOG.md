@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Full-screen splash intro with left-to-right wipe, staged site messaging, reverse reveal, reduced-motion support and one-play-per-session behavior
+- Article reading settings rail with direct font-size and line-height controls, cycling reading widths, focus mode, theme switching and responsive mobile behavior
+- Persistent article table of contents with active-section tracking, collapsible presentation and desktop/mobile layout rules
 - Hero section on the home page: avatar, intro and meta on the left, blog activity heatmap card on the right
 - Year-view update heatmap (12 month columns × 4 week rows) with fluid full-width layout, uniform gaps, hover ring and a gliding tooltip
 - Hover highlight on the home post list: a shared background that glides from card to card as the cursor moves
@@ -38,6 +41,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Reworked the site into a monochrome personal knowledge-base interface with a centered reading column, tighter desktop rails, responsive spacing and motion-aware transitions
+- Redesigned article pages so the title, cover image and article body share the selected reading width without obscuring the content with side controls
+- Moved reading progress into the left rail, restored the vertical TOC presentation and kept mobile readers focused on content plus navigation
 - Site personalisation: author set to TeAnli, `site.profile` pointing at the author's GitHub, site title changed to TeAnli小屋, and the WeChat contact configured in `socials`
 - Redesigned footer into a multi-column layout: brand with site description and socials, site info column with post/tag counts, running days, RSS link and a live clock; theme credit moved to a dedicated bottom bar
 - Header nav items keep their hover glide, click bounce and focusability, but the item for the page you are already on no longer navigates (clicking it used to reload the same page). It is marked `aria-current="page"` so assistive tech announces it as the current page rather than a link
@@ -48,6 +54,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Focus mode now hides surrounding reading chrome without removing or misaligning the table of contents, and reading controls use the requested 14–24px / 1.6–2.0 ranges
 - RSS 404: the footer link and the `<link rel="alternate">` autodiscovery tag were built with `getRelativeLocaleUrl`, which appends a trailing slash (`/rss.xml/`) and misses the file route. Both now use `getAssetPath`, which keeps `/rss.xml` intact while still honouring `base`
 - Missing footer on the friends/links page: `links.astro` imported `Footer` but never rendered it
 - Dark mode prose (including display math) rendering too dark: `.app-prose` now applies `dark:prose-invert` so unstyled children switch to inverted colors

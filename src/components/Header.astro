@@ -59,11 +59,11 @@ const groupNavPaths = groupPaths.join(",");
 const isGroupActive = groupPaths.some(isActive);
 
 const navItem =
-  "nav-item relative z-10 flex items-center gap-1.5 rounded-full px-4 py-2 text-[15px] leading-none font-semibold whitespace-nowrap transition-[color,transform] duration-200 active:scale-[0.93]";
+  "nav-item relative z-10 flex items-center gap-1.5 rounded-md px-3.5 py-2 text-[13px] leading-none font-semibold tracking-[0.02em] whitespace-nowrap transition-[color,transform,background-color] duration-200 active:scale-[0.96]";
 const navIconLink =
-  "relative grid size-9 place-items-center rounded-full transition-all duration-200 hover:bg-muted/60 hover:text-foreground active:scale-95 max-sm:size-10";
+  "relative grid size-9 place-items-center rounded-md transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-95 max-sm:size-10";
 const island =
-  "bg-background/80 border-border animate-header-in pointer-events-auto flex h-14 flex-none items-center rounded-full border backdrop-blur-md";
+  "surface-panel animate-header-in pointer-events-auto flex h-14 flex-none items-center rounded-xl";
 
 // --- Dynamic island ---------------------------------------------------------
 // Gated on hero.enabled: every value and string it shows is hero-derived, so
@@ -97,7 +97,7 @@ const islandCountdownText = islandHasCountdown
 <a
   id="skip-to-content"
   href="#main-content"
-  class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4"
+  class="bg-background text-foreground absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4"
 >
   {t.a11y.skipToContent}
 </a>
@@ -130,7 +130,7 @@ const islandCountdownText = islandHasCountdown
            logo would otherwise sit pointlessly next to the hamburger. -->
       <a
         href={getRelativeLocaleUrl(locale, "")}
-        class="focus-outline text-foreground hover:text-accent group relative z-10 grid size-11 flex-none place-items-center rounded-full transition-colors duration-200 max-sm:hidden"
+        class="focus-outline text-foreground hover:text-foreground/70 group relative z-10 grid size-11 flex-none place-items-center rounded-lg transition-colors duration-200 max-sm:hidden"
         aria-label={site.title}
       >
         <Logo
@@ -148,7 +148,7 @@ const islandCountdownText = islandHasCountdown
           <!-- Sliding dark indicator behind the hovered/active nav item -->
           <span
             aria-hidden="true"
-            class="absolute inset-y-0 left-0 z-0 rounded-full opacity-0"
+            class="absolute inset-y-0 left-0 z-0 rounded-md opacity-0"
             id="nav-indicator"
           >
           </span>
@@ -187,12 +187,12 @@ const islandCountdownText = islandHasCountdown
             <ul
               id="nav-submenu-content"
               data-nav-submenu
-              class="border-border bg-background/95 absolute z-30 hidden flex-col gap-0.5 rounded-2xl border p-1.5 shadow-lg backdrop-blur-md"
+              class="surface-panel absolute z-30 hidden flex-col gap-0.5 rounded-lg p-1.5 shadow-lg"
             >
               <li>
                 <a
                   href={getRelativeLocaleUrl(locale, "posts")}
-                  class="hover:bg-muted/60 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                  class="hover:bg-muted flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
                   data-nav-path="/posts"
                   aria-current={isActive("/posts") ? "page" : undefined}
                 >
@@ -203,7 +203,7 @@ const islandCountdownText = islandHasCountdown
               <li>
                 <a
                   href={getRelativeLocaleUrl(locale, "tags")}
-                  class="hover:bg-muted/60 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                  class="hover:bg-muted flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
                   data-nav-path="/tags"
                   aria-current={isActive("/tags") ? "page" : undefined}
                 >
@@ -216,7 +216,7 @@ const islandCountdownText = islandHasCountdown
                   <li>
                     <a
                       href={getRelativeLocaleUrl(locale, "archives")}
-                      class="hover:bg-muted/60 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                      class="hover:bg-muted flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
                       data-nav-path="/archives"
                       aria-current={isActive("/archives") ? "page" : undefined}
                     >
@@ -256,7 +256,7 @@ const islandCountdownText = islandHasCountdown
       <!-- Mobile menu button (only visible nav control on small screens) -->
       <button
         id="menu-btn"
-        class="focus-outline hover:bg-muted/60 relative z-10 grid size-10 place-items-center rounded-full transition-colors duration-200 sm:hidden"
+        class="focus-outline hover:bg-muted relative z-10 grid size-10 place-items-center rounded-lg transition-colors duration-200 sm:hidden"
         aria-label={t.a11y.openMenu}
         aria-expanded="false"
         aria-haspopup="dialog"
@@ -311,7 +311,7 @@ const islandCountdownText = islandHasCountdown
           data-tz={site.timezone}
           data-since={hero.since}
           data-event={hero.event?.date ?? ""}
-          class="pointer-events-none absolute inset-x-0 top-0 z-20 hidden h-14 items-start justify-center pt-2.5 xl:flex"
+          class="pointer-events-none absolute inset-x-0 top-0 z-20 hidden h-14 items-start justify-center xl:flex"
         >
           {/* The button holds two absolutely stacked layers — the collapsed
               clock + countdown, and the expanded clock + four stats — and the
@@ -320,7 +320,7 @@ const islandCountdownText = islandHasCountdown
           <button
             id="island-btn"
             type="button"
-            class="bg-background/80 border-border animate-header-in pointer-events-auto relative h-9 w-[9.5rem] flex-none overflow-hidden rounded-full border backdrop-blur-md"
+            class="bg-background/80 border-border animate-header-in pointer-events-auto relative h-14 w-[9.5rem] flex-none overflow-hidden rounded-full border backdrop-blur-md"
             aria-expanded="false"
           >
             <span class="island-layer island-compact absolute inset-0 flex items-center justify-center gap-1.5 text-[13px] leading-none font-medium">
@@ -416,7 +416,7 @@ const islandCountdownText = islandHasCountdown
     role="dialog"
     aria-modal="true"
     aria-label={t.nav.menu}
-    class="border-border bg-background pointer-events-auto fixed inset-s-0 top-0 z-40 flex h-dvh w-72 max-w-[85vw] flex-col gap-1 overflow-y-auto overscroll-contain border-e p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-xl sm:hidden"
+    class="surface-panel pointer-events-auto fixed inset-s-0 top-0 z-40 flex h-dvh w-72 max-w-[85vw] flex-col gap-1 overflow-y-auto overscroll-contain border-e p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-xl sm:hidden"
   >
     <div class="flex items-center justify-between gap-2 pb-1">
       <span class="px-2 text-sm font-semibold">{site.title}</span>
@@ -435,7 +435,7 @@ const islandCountdownText = islandHasCountdown
         <a
           href={getRelativeLocaleUrl(locale, "")}
           class:list={[
-            "hover:text-foreground block rounded-2xl px-4 py-2.5 font-medium transition-colors",
+            "hover:text-foreground block rounded-md px-4 py-2.5 font-medium transition-colors",
             { "active-nav": isHome },
           ]}
           data-nav-path="/"
@@ -449,7 +449,7 @@ const islandCountdownText = islandHasCountdown
         <button
           type="button"
           id="menu-group-btn"
-          class="hover:text-foreground flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-2.5 text-start font-medium transition-colors"
+          class="hover:text-foreground flex w-full items-center justify-between gap-2 rounded-md px-4 py-2.5 text-start font-medium transition-colors"
           aria-expanded={isGroupActive ? "true" : "false"}
           aria-controls="menu-group-items"
         >
@@ -464,7 +464,7 @@ const islandCountdownText = islandHasCountdown
             <a
               href={getRelativeLocaleUrl(locale, "posts")}
               class:list={[
-                "hover:text-foreground block rounded-2xl px-3 py-2 font-medium transition-colors",
+                "hover:text-foreground block rounded-md px-3 py-2 font-medium transition-colors",
                 { "active-nav": isActive("/posts") },
               ]}
               data-nav-path="/posts"
@@ -476,7 +476,7 @@ const islandCountdownText = islandHasCountdown
             <a
               href={getRelativeLocaleUrl(locale, "tags")}
               class:list={[
-                "hover:text-foreground block rounded-2xl px-3 py-2 font-medium transition-colors",
+                "hover:text-foreground block rounded-md px-3 py-2 font-medium transition-colors",
                 { "active-nav": isActive("/tags") },
               ]}
               data-nav-path="/tags"
@@ -490,7 +490,7 @@ const islandCountdownText = islandHasCountdown
                 <a
                   href={getRelativeLocaleUrl(locale, "archives")}
                   class:list={[
-                    "hover:text-foreground block rounded-2xl px-3 py-2 font-medium transition-colors",
+                    "hover:text-foreground block rounded-md px-3 py-2 font-medium transition-colors",
                     { "active-nav": isActive("/archives") },
                   ]}
                   data-nav-path="/archives"
@@ -506,7 +506,7 @@ const islandCountdownText = islandHasCountdown
         <a
           href={getRelativeLocaleUrl(locale, "about")}
           class:list={[
-            "hover:text-foreground block rounded-2xl px-4 py-2.5 font-medium transition-colors",
+            "hover:text-foreground block rounded-md px-4 py-2.5 font-medium transition-colors",
             { "active-nav": isActive("/about") },
           ]}
           data-nav-path="/about"
@@ -518,7 +518,7 @@ const islandCountdownText = islandHasCountdown
         <a
           href={getRelativeLocaleUrl(locale, "links")}
           class:list={[
-            "hover:text-foreground block rounded-2xl px-4 py-2.5 font-medium transition-colors",
+            "hover:text-foreground block rounded-md px-4 py-2.5 font-medium transition-colors",
             { "active-nav": isActive("/links") },
           ]}
           data-nav-path="/links"
@@ -536,7 +536,7 @@ const islandCountdownText = islandHasCountdown
           id="drawer-theme-btn"
           type="button"
           data-theme-toggle
-          class="focus-outline hover:bg-muted/60 mt-auto flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-3 text-start font-medium transition-colors"
+          class="focus-outline hover:bg-muted mt-auto flex w-full items-center justify-between gap-2 rounded-md px-4 py-3 text-start font-medium transition-colors"
           aria-label={t.a11y.toggleTheme}
         >
           <span>{t.nav.theme}</span>

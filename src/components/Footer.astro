@@ -49,11 +49,13 @@ const initialDatetime = datetimeFormatter.format(now);
 ---
 
 <footer class:list={["app-layout", className]} {...attrs}>
-  <div class="border-border border-t pt-8 pb-6">
+  <div class="border-border border-t pt-10 pb-6">
     <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr] lg:gap-6">
       {/* 品牌栏：站点名 + 简介 + 社交链接 */}
       <div class="space-y-3 text-center sm:text-left">
-        <p class="text-foreground font-semibold tracking-wide">{site.title}</p>
+        <p class="text-foreground text-lg font-semibold tracking-[-0.02em]">
+          {site.title}
+        </p>
         <p class="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
           {site.description}
         </p>
@@ -80,11 +82,11 @@ const initialDatetime = datetimeFormatter.format(now);
           <li>
             <a
               href={getAssetPath("rss.xml")}
-              class="hover:text-accent inline-flex items-center gap-1 transition-colors"
+              class="hover:text-foreground inline-flex items-center gap-1 transition-colors"
             >
               RSS
               <span
-                class="bg-accent/15 text-accent rounded px-1 py-px text-[10px] font-semibold uppercase"
+                class="bg-foreground text-background rounded px-1 py-px text-[10px] font-semibold uppercase"
               >
                 XML
               </span>

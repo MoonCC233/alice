@@ -108,3 +108,67 @@ Tunnel 换了一个思路：**不需要你开放任何入站端口**。
 改完等 DNS 生效, 你的网站就可以访问了 还有 cloudflare 的 cdn 以及防护 岂不美哉
 
 最后两个小提醒：免费版的多级子域名（比如 `a.b.你的域名`）需要 Advanced Certificate Manager, 那是要额外付费的, 用一级子域名则没有这个问题; 另外原来为了暴露服务而对外的那些端口, 现在可以关掉了——已经不需要了。
+
+## Cloudflare Pages 部署静态站点
+
+前面两节讲的都建立在「你有一台机器」的前提上, 但博客、文档站这类**纯静态**的东西压根不需要一台常开的服务器, 更用不上 Tunnel。Pages 就是干这个的：你把构建产物交给它, 分发、证书、CDN 全都不用自己管。
+
+免费版对这个用途很够用——**不限带宽、不限请求数**, 单个项目最多 2 万个文件、单个文件上限 25 MiB, 一个账号能开 100 个项目。唯一有可能先撞到的是每月 500 次的构建配额, 因为**每一次 push 都算一次构建**, 折腾得勤的时候记得看一眼。
+
+### 1. 创建项目
+
+Dashboard 左侧进 **Workers & Pages**, 点 **Create** → **Pages** → **Connect to Git**, 授权后选中博客仓库。
+
+接着是构建配置, 这三项决定构建能不能过：
+
+- **Framework preset**：选 `Astro`
+- **Build command**：`pnpm build`（前提是 `package.json` 里有这个脚本）
+- **Build output directory**：`dist`
+
+> [!NOTE]
+> 纯静态站点**不需要** `@astrojs/cloudflare` 适配器——那个是给 SSR / API 路由用的, 所有页面都预渲染的话装上反而会把站点弄成需要 Worker 运行时的形态, 构建产物也对不上 Pages 的预期。
+
+> [!WARNING]
+> 构建环境的 Node 版本是最容易翻车的一项。Pages 默认版本不一定满足项目 `engines` 里的要求（比如 Astro 7 要 Node ≥ 22.12）, 保险的做法是在构建配置里加个环境变量 `NODE_VERSION=22`, 或者在仓库根放一个 `.node-version` 文件让版本跟着代码走。
+
+包管理器这边还有一个坑值得单独说：仓库里存在 `pnpm-lock.yaml` 时构建器会用 pnpm, 这没问题; 但如果同时还有 `pnpm-workspace.yaml`, 更麻烦的是——**当仓库里没有任何 wrangler 配置时, Cloudflare 的构建器会自作主张跑一次 `astro add cloudflare`**, 这一步在 pnpm workspace 的根目录场景下会直接失败, 构建就挂在这里了。这个站点当时就是这么挂的。在仓库根留一份 wrangler 配置文件能挡住这个自动行为, 原因见下面第 3 节。
+
+### 2. Git 集成, 还是本地直传
+
+两条路, 按仓库能不能公开来选：
+
+- **Git 集成**：就是上面的流程。每次 push 自动构建, 提 PR 还会生成一个预览地址（preview deployment）, 顺手就能当验收环境用。
+- **本地直传（Direct Upload）**：构建在自己机器或 CI 上做, 只把 `dist` 传上去。适合仓库不想公开、或者构建过程依赖私有资源的情况。
+
+直传之前先在本地登录一次, 之后每次改完重新构建再传：
+
+```bash
+pnpm dlx wrangler@latest login
+pnpm build
+pnpm dlx wrangler@latest pages deploy dist --project-name=你的项目名
+```
+
+（不用 pnpm 的话把 `pnpm dlx` 换成 `npx` 是一样的。）
+
+### 3. 用配置文件固定构建参数
+
+Pages 项目和 Workers 一样能吃 `wrangler.jsonc`, 关键就是 **`pages_build_output_dir`** 这一个字段：
+
+```jsonc
+{
+  "name": "你的项目名",
+  "compatibility_date": "2026-09-20",
+  "pages_build_output_dir": "./dist",
+}
+```
+
+`name` 要和 Pages 上的项目名严格一致, 否则 wrangler 要么找不到项目, 要么把产物传进另一个项目。有了这个文件, `wrangler pages deploy` 不带任何参数就能跑, 项目名也不会和代码里的其他地方对不上。
+
+> [!CAUTION]
+> `pages_build_output_dir` 和 `assets` 不要写进同一个文件。`assets`（`directory` + `not_found_handling`）是 Workers 静态资源那一套的字段, Pages 项目只认 `pages_build_output_dir`。两种模式**选一个**: 要 Pages 就用前者, 要 Workers 就用后者, 混在一起只会让构建器不知道该按哪种方式部署。
+
+### 4. 绑定域名
+
+项目建好之后在 **Custom domains** 里把域名加进去, 比如 `blog.你的域名`。域名的 NS 已经在这个账号下的话, CNAME 记录会自动加上, 证书也会自动签发——不用像 Tunnel 那样手动配路由, 也不用操心协议那一档子事。
+
+有个和备案相关的事值得说清楚：Pages 的节点全在境外, 流量不会落到国内云厂商那边, 所以**不涉及备案**。这也是纯静态托管比自己开服务器省事的地方。代价是内地访问的延迟取决于离你最近的边缘节点, 别指望它和国内云的线路一样快。

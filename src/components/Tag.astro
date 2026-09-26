@@ -19,10 +19,10 @@ const locale = Astro.currentLocale ?? config.site.lang;
     href={getRelativeLocaleUrl(locale, `tags/${tag}/`)}
     transition:name={tag}
     class:list={[
-      "inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-2.5 py-1",
+      "border-border bg-muted/40 inline-flex items-center gap-1 rounded-md border px-2.5 py-1",
       "transition-colors duration-200",
-      "hover:border-accent/40 hover:bg-accent/10 hover:text-accent",
-      "focus-visible:text-accent focus-visible:border-accent/40",
+      "hover:border-foreground hover:bg-foreground hover:text-background",
+      "focus-visible:text-foreground focus-visible:border-foreground",
       { "text-sm": size === "sm" },
       { "text-base": size === "lg" },
     ]}

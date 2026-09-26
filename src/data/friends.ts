@@ -15,18 +15,9 @@ export type FriendLink = {
 
 export const friends: FriendLink[] = [
   {
-    name: "AstroPaper",
-    url: "https://astro-paper.pages.dev/",
-    desc: "本站所使用的极简、响应式 Astro 博客主题。",
-  },
-  {
-    name: "Sat Naing",
-    url: "https://satnaing.dev/",
-    desc: "AstroPaper 主题作者的个人站点。",
-  },
-  {
-    name: "Astro",
-    url: "https://astro.build/",
-    desc: "内容驱动的现代 Web 框架。",
+    name: "MoonCC",
+    url: "https://blog.mooncc.cn",
+    desc: "MoonCC 的博客，记录技术与生活的点滴。",
+    avatar: "https://blog.mooncc.cn/_astro/avatar.V3QQoo0u_17eoc9.webp",
   },
 ];

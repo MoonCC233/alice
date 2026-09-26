@@ -57,9 +57,9 @@ if (breadcrumbList[0] === "tags" && !isNaN(Number(breadcrumbList[2]))) {
 }
 ---
 
-<nav class="app-layout mt-8 mb-1" aria-label={t.a11y.breadcrumb}>
+<nav class="app-layout mt-10 mb-2" aria-label={t.a11y.breadcrumb}>
   <ul
-    class="flex flex-wrap items-center gap-x-1 font-light [&>li:not(:last-child)>a]:hover:opacity-100"
+    class="text-muted-foreground [&>li:not(:last-child)>a]:hover:text-foreground flex flex-wrap items-center gap-x-2 text-xs font-medium tracking-[0.08em] uppercase"
   >
     <li class="flex items-center gap-x-1">
       <a href={getRelativeLocaleUrl(locale, "")} class="opacity-80">

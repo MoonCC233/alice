@@ -39,9 +39,6 @@ export const reduceMotion = (): boolean =>
 export const dur = (seconds: number): number =>
   reduceMotion() ? 0 : seconds;
 
-/** Sticky-header offset: 6rem scroll-padding + 1rem scroll-margin in global.css. */
-const ANCHOR_OFFSET = -112;
-
 /**
  * Classes that live on <html>. The first two are Lenis' own — it adds them to
  * its root element and lenis.css keys off them — and the third is ours, used
@@ -56,6 +53,66 @@ const applyRootClasses = (root: HTMLElement): void => {
 let lenis: Lenis | null = null;
 
 export const getLenis = (): Lenis | null => lenis;
+
+/**
+ * In-page anchor jumps: TOC entries, heading permalinks, the skip link.
+ *
+ * Lenis' own `anchors` option is deliberately not used. It resolves the target
+ * but never calls preventDefault, so the browser performs its own fragment jump
+ * too. That jump moves the real scroll position behind Lenis' back, leaving its
+ * internal position one jump stale — the next click then measures against the
+ * old value and animates to the wrong offset.
+ *
+ * No numeric offset is passed to scrollTo either: it already subtracts the
+ * target's scroll-margin-top and html's scroll-padding-top (1rem + 6rem in
+ * global.css, the sticky-header clearance). Adding one would land 112px short,
+ * below the scrollspy's reading line.
+ */
+function initAnchorScroll(lenis: Lenis): void {
+  document.addEventListener(
+    "click",
+    event => {
+      // Leave modified and middle clicks to the browser, and respect another
+      // handler having claimed the event.
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const anchor = event
+        .composedPath()
+        .find(
+          (node): node is HTMLAnchorElement =>
+            node instanceof HTMLAnchorElement && !node.target && !!node.href
+        );
+      if (!anchor) return;
+
+      // Same document only; a cross-page link goes through View Transitions.
+      const target = new URL(anchor.href);
+      const current = new URL(window.location.href);
+      if (
+        target.origin !== current.origin ||
+        target.pathname !== current.pathname ||
+        !target.hash
+      ) {
+        return;
+      }
+
+      // A heading permalink with no id resolves to "#" and bails out here.
+      const destination = document.getElementById(
+        decodeURIComponent(target.hash).slice(1)
+      );
+      if (!destination) return;
+
+      event.preventDefault();
+      lenis.scrollTo(destination);
+      // preventDefault suppressed the browser's hash update; pushState rather
+      // than assigning location.hash, which would jump a second time.
+      window.history.pushState(null, "", target.hash);
+    },
+    { capture: true }
+  );
+}
 
 /**
  * Smooth scrolling.
@@ -76,10 +133,9 @@ function initSmoothScroll(): void {
     // Stops and starts Lenis from the wrapper's own overflow, which is exactly
     // how the drawer and the lightbox lock the page. No manual wiring needed.
     autoToggle: true,
-    // Take over in-page anchor jumps (TOC, heading links, skip link) so the
-    // sticky-header offset is applied by Lenis instead of scroll-behavior.
-    anchors: { offset: ANCHOR_OFFSET },
   });
+
+  initAnchorScroll(lenis);
 
   applyRootClasses(document.documentElement);
 

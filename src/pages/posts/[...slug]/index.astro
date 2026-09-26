@@ -17,10 +17,9 @@ import BackButton from "./_components/BackButton.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
 import Toc from "./_components/Toc.astro";
-import ReadingProgress from "./_components/ReadingProgress.astro";
-import PostSidebar from "./_components/PostSidebar.astro";
+import ReadingSettings from "./_components/ReadingSettings.astro";
 import { useTranslations } from "@/i18n";
-import { estimateReadingMinutes } from "@/utils/getReadingTime";
+import { countWords, estimateReadingMinutes } from "@/utils/getReadingTime";
 import config from "@/config";
 
 export async function getStaticPaths() {
@@ -68,9 +67,24 @@ type Props = {
 const { post, prevPost, nextPost } = Astro.props;
 const locale = Astro.currentLocale ?? config.site.lang;
 const t = useTranslations(locale);
+const focusCopy =
+  locale === "zh"
+    ? {
+        label: "专注阅读",
+        exit: "退出专注模式",
+        toc: "打开目录",
+        progress: "阅读进度",
+      }
+    : {
+        label: "Focus reading",
+        exit: "Exit focus mode",
+        toc: "Open table of contents",
+        progress: "Reading progress",
+      };
 
 const {
   title,
+  author,
   description,
   canonicalURL,
   pubDatetime,
@@ -86,6 +100,7 @@ const coverUrl = getCoverUrl(cover);
 const { Content, headings } = await render(post);
 
 const totalMin = estimateReadingMinutes(post.body);
+const wordCount = countWords(post.body);
 ---
 
 <PostLayout
@@ -99,28 +114,116 @@ const totalMin = estimateReadingMinutes(post.body);
 
   <main
     id="main-content"
-    class:list={["app-layout", { "mt-8": !config.features.showBackButton }]}
+    class:list={[
+      "app-layout post-reading-page",
+      { "mt-8": !config.features.showBackButton },
+    ]}
+    data-reading-page
     data-pagefind-body
   >
-    <h1
-      style={{ viewTransitionName: toTransitionName(post.id) }}
-      class="text-accent inline-block text-2xl font-bold sm:text-3xl"
-    >
-      {title}
-    </h1>
-
-    <div class="my-2 flex items-center gap-2">
-      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
-      <span
-        aria-hidden="true"
-        class:list={[
-          "text-muted-foreground max-sm:hidden",
-          { hidden: !config.features.editPost?.enabled || hideEditPost },
-        ]}
+    <header class="post-reading-header">
+      <p class="post-reading-kicker">ARTICLE / KNOWLEDGE BASE</p>
+      <h1
+        style={{ viewTransitionName: toTransitionName(post.id) }}
+        class="post-reading-title"
       >
-        |
-      </span>
-      <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+        {title}
+      </h1>
+
+      <div class="post-reading-meta">
+        <span class="post-reading-meta-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path>
+            <path d="M4.5 20a7.5 7.5 0 0 1 15 0"></path>
+          </svg>
+          <span>{author}</span>
+        </span>
+        <Datetime
+          {pubDatetime}
+          {modDatetime}
+          {timezone}
+          size="lg"
+          class="post-reading-meta-item"
+        />
+        <span class="post-reading-meta-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5"></circle>
+            <path d="M12 7v5l3 2"></path>
+          </svg>
+          <span>{t.post.readingTime.replace("{{min}}", String(totalMin))}</span>
+        </span>
+        <span class="post-reading-meta-item">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 5h14v14H5z"></path>
+            <path d="M8 9h8M8 12h8M8 15h5"></path>
+          </svg>
+          <span>{wordCount.toLocaleString(locale)} {t.post.wordCount}</span>
+        </span>
+        <span
+          aria-hidden="true"
+          class:list={[
+            "post-reading-meta-separator max-sm:hidden",
+            { hidden: !config.features.editPost?.enabled || hideEditPost },
+          ]}
+        >
+          /
+        </span>
+        <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+      </div>
+    </header>
+
+    <div
+      class="focus-mode-panel"
+      data-focus-panel
+      aria-hidden="true"
+      inert
+      aria-label={focusCopy.label}
+    >
+      <button
+        type="button"
+        class="focus-mode-action focus-mode-exit"
+        data-action="toggle-focus"
+        aria-pressed="true"
+        aria-label={focusCopy.exit}
+        title={focusCopy.exit}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m15 18-6-6 6-6"></path>
+        </svg>
+        <span class="sr-only">{focusCopy.exit}</span>
+      </button>
+
+      <div class="focus-mode-context">
+        <span class="focus-mode-label">{focusCopy.label}</span>
+        <span class="focus-mode-current" data-focus-current>
+          {headings[0]?.text}
+        </span>
+      </div>
+
+      <div class="focus-mode-actions">
+        <span
+          class="focus-mode-progress"
+          data-focus-progress
+          aria-label={focusCopy.progress}
+        >
+          0%
+        </span>
+        <button
+          type="button"
+          class="focus-mode-action"
+          data-action="toggle-toc"
+          aria-controls="toc-desktop toc-mobile"
+          aria-expanded="true"
+          aria-label={focusCopy.toc}
+          title={focusCopy.toc}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 6h14M5 12h14M5 18h14"></path>
+            <path d="M3 6h.01M3 12h.01M3 18h.01"></path>
+          </svg>
+          <span class="sr-only">{focusCopy.toc}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Cover hero. Deliberately outside #article: initLightbox only binds
@@ -129,7 +232,7 @@ const totalMin = estimateReadingMinutes(post.body);
       coverUrl && (
         <div
           style={{ viewTransitionName: toCoverTransitionName(post.id) }}
-          class="bg-muted mt-6 block aspect-[16/10] w-full overflow-hidden rounded-xl"
+          class="post-reading-cover"
         >
           {/* decoding=sync + fetchpriority=high: Astro does not wait for images
               before snapshotting the new page, and the list card already fetched
@@ -143,21 +246,15 @@ const totalMin = estimateReadingMinutes(post.body);
             loading="eager"
             decoding="sync"
             fetchpriority="high"
-            class="size-full object-cover"
+            class="size-full object-cover transition duration-700 hover:scale-[1.02]"
           />
         </div>
       )
     }
 
-    <Toc headings={headings} />
+    <ReadingSettings />
 
-    <PostSidebar
-      body={post.body}
-      totalMin={totalMin}
-      {pubDatetime}
-      {modDatetime}
-      {timezone}
-    />
+    <Toc headings={headings} />
 
     <article
       id="article"
@@ -181,8 +278,6 @@ const totalMin = estimateReadingMinutes(post.body);
 
     <BackToTopButton />
 
-    <ReadingProgress totalMin={totalMin} />
-
     <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
       {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
     </ul>
@@ -195,38 +290,373 @@ const totalMin = estimateReadingMinutes(post.body);
   </main>
 </PostLayout>
 
+<style>
+  :global(html) {
+    --reader-half-width: 22rem;
+    --reader-layout-gap: 1rem;
+    --reader-toc-width: 12.5rem;
+    --reader-rail-width: 4.5rem;
+    --reader-settings-width: 4.25rem;
+  }
+
+  :global(html[data-reading-width="narrow"]) {
+    --reader-half-width: 19rem;
+  }
+
+  :global(html[data-reading-width="wide"]) {
+    --reader-half-width: min(33.5rem, calc(50vw - 19rem));
+  }
+
+  .post-reading-page {
+    position: relative;
+    margin-top: 2rem !important;
+    padding-bottom: 5rem;
+    --post-reading-width: 44rem;
+  }
+
+  html[data-reading-width="narrow"] .post-reading-page {
+    --post-reading-width: 38rem;
+  }
+
+  html[data-reading-width="wide"] .post-reading-page {
+    --post-reading-width: 48rem;
+  }
+
+  .post-reading-header {
+    width: 100%;
+    max-width: var(--post-reading-width);
+    margin-inline: auto;
+    padding-block: 1.5rem 2.25rem;
+    border-bottom: 1px solid var(--border);
+    transition: max-width 320ms var(--ease-out-expo);
+  }
+
+  .post-reading-kicker {
+    margin-bottom: 0.875rem;
+    color: var(--muted-foreground);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+
+  .post-reading-title {
+    display: inline-block;
+    max-width: 100%;
+    color: var(--foreground);
+    font-size: clamp(2.5rem, 5vw, 4.75rem);
+    font-weight: 650;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    text-wrap: balance;
+  }
+
+  .post-reading-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-top: 1.25rem;
+    color: var(--muted-foreground);
+  }
+
+  .post-reading-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+
+  .post-reading-meta-item svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.6;
+  }
+
+  .post-reading-meta-item :global(.text-sm),
+  .post-reading-meta-item :global(.sm\:text-base) {
+    font-size: inherit;
+  }
+
+  .post-reading-meta-separator {
+    opacity: 0.55;
+  }
+
+  .focus-mode-panel {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    z-index: 50;
+    display: flex;
+    width: min(30rem, calc(100vw - 2rem));
+    min-height: 3.25rem;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 0.375rem;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: 0 18px 44px rgb(var(--shadow-color) / 0.1);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -0.75rem);
+    visibility: hidden;
+    transition:
+      opacity 220ms ease,
+      transform 260ms var(--ease-out-expo),
+      visibility 0s linear 260ms;
+  }
+
+  html[data-focus-mode="on"] .focus-mode-panel {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .focus-mode-action {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: none;
+    place-items: center;
+    border-radius: 0.75rem;
+    color: var(--muted-foreground);
+    transition:
+      color 180ms ease,
+      background-color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .focus-mode-action:hover,
+  .focus-mode-action:focus-visible {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .focus-mode-action:active {
+    transform: scale(0.94);
+  }
+
+  .focus-mode-action svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+  }
+
+  .focus-mode-context {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+    gap: 0.125rem;
+  }
+
+  .focus-mode-label {
+    color: var(--muted-foreground);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .focus-mode-current {
+    overflow: hidden;
+    color: var(--foreground);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .focus-mode-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: none;
+  }
+
+  .focus-mode-progress {
+    min-width: 2.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    text-align: end;
+  }
+
+  html[data-focus-mode="on"] .post-reading-page {
+    padding-top: 4.25rem;
+  }
+
+  .post-reading-cover {
+    display: block;
+    width: 100%;
+    max-width: var(--post-reading-width);
+    aspect-ratio: 16 / 9;
+    margin: 2.5rem auto 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    background: var(--muted);
+    box-shadow: 0 24px 70px rgb(var(--shadow-color) / 0.1);
+    transition: max-width 320ms var(--ease-out-expo);
+  }
+
+  .post-reading-page :global(#article) {
+    width: 100%;
+    max-width: var(--post-reading-width);
+    transition:
+      max-width 320ms var(--ease-out-expo),
+      line-height 260ms var(--ease-out-expo);
+  }
+
+  @media (min-width: 1024px) and (max-width: 1439px) {
+    :global(html) {
+      --reader-half-width: 16rem;
+      --reader-layout-gap: 0.5rem;
+      --reader-toc-width: 10rem;
+      --reader-rail-width: 4.25rem;
+      --reader-settings-width: 4.25rem;
+    }
+
+    :global(html[data-reading-width="narrow"]) {
+      --reader-half-width: 15rem;
+    }
+
+    :global(html[data-reading-width="wide"]) {
+      --reader-half-width: 17rem;
+    }
+
+    .post-reading-page {
+      --post-reading-width: 32rem;
+    }
+
+    html[data-reading-width="narrow"] .post-reading-page {
+      --post-reading-width: 30rem;
+    }
+
+    html[data-reading-width="wide"] .post-reading-page {
+      --post-reading-width: 34rem;
+    }
+  }
+
+  @media (min-width: 1440px) {
+    html[data-reading-width="wide"] .post-reading-page {
+      --post-reading-width: min(67rem, calc(100vw - 38rem));
+    }
+
+    :global(#site-header),
+    :global(#back-button) {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .post-reading-page {
+      margin-top: 0.5rem !important;
+      padding-bottom: 3rem;
+    }
+
+    .post-reading-header {
+      padding-top: 0.5rem;
+    }
+
+    .post-reading-title {
+      font-size: 2.5rem;
+    }
+
+    .post-reading-meta-item {
+      font-size: 0.8125rem;
+    }
+
+    .focus-mode-panel {
+      top: 0.625rem;
+      width: calc(100vw - 1rem);
+      min-height: 3rem;
+      gap: 0.5rem;
+      border-radius: 0.875rem;
+    }
+
+    .focus-mode-action {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+
+    .focus-mode-current {
+      font-size: 0.75rem;
+    }
+
+    .focus-mode-progress {
+      min-width: 2.5rem;
+      font-size: 0.6875rem;
+    }
+
+    html[data-focus-mode="on"] .post-reading-page {
+      padding-top: 3.75rem;
+    }
+
+    .post-reading-cover {
+      aspect-ratio: 4 / 3;
+      margin-top: 1.75rem;
+      border-radius: 0.875rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post-reading-header,
+    .post-reading-cover,
+    .post-reading-page :global(#article),
+    .focus-mode-panel,
+    .focus-mode-action {
+      transition: none;
+    }
+  }
+</style>
+
 <script is:inline data-astro-rerun>
-  function createProgressBar() {
-    const progressContainer = document.createElement("div");
-    progressContainer.className =
-      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+  function initReadingProgress() {
+    const progress = document.querySelector("[data-reading-progress]");
+    const progressBar = progress?.querySelector("[data-reading-progress-bar]");
+    if (!progress || !progressBar || progress.dataset.bound === "true") return;
 
-    const progressBar = document.createElement("div");
-    progressBar.className = "progress-bar h-1 w-0 bg-accent";
-    progressBar.id = "myBar";
+    progress.dataset.bound = "true";
 
-    progressContainer.appendChild(progressBar);
-    document.body.appendChild(progressContainer);
+    const update = () => {
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      const scrolled = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
+      const percentage = Math.min(100, Math.max(0, scrolled));
+
+      progressBar.style.strokeDashoffset = String(100 - percentage);
+      progress.querySelector("[data-reading-progress-value]").textContent =
+        String(Math.round(percentage));
+      progress.setAttribute("aria-valuenow", String(Math.round(percentage)));
+      document.querySelectorAll("[data-focus-progress]").forEach(node => {
+        node.textContent = `${Math.round(percentage)}%`;
+      });
+    };
+
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
   }
-  createProgressBar();
 
-  function updateScrollProgress() {
-    document.addEventListener("scroll", () => {
-      const winScroll =
-        document.body.scrollTop || document.documentElement.scrollTop;
-      const height =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      if (document) {
-        const myBar = document.getElementById("myBar");
-        if (myBar) {
-          myBar.style.width = scrolled + "%";
-        }
-      }
-    });
-  }
-  updateScrollProgress();
+  initReadingProgress();
 
   function addHeadingLinks() {
     const headings = Array.from(
