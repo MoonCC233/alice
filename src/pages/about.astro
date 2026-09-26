@@ -3,6 +3,19 @@ import { getEntry, render } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Main from "@/components/Main.astro";
 import config from "@/config";
+import AstroIcon from "@/assets/icons/tech/Astro.svg";
+import CloudflareIcon from "@/assets/icons/tech/Cloudflare.svg";
+import GitHubIcon from "@/assets/icons/tech/GitHub.svg";
+import GsapIcon from "@/assets/icons/tech/Gsap.svg";
+import KaTeXIcon from "@/assets/icons/tech/KaTeX.svg";
+import LenisIcon from "@/assets/icons/tech/Lenis.svg";
+import MdxIcon from "@/assets/icons/tech/Mdx.svg";
+import PagefindIcon from "@/assets/icons/tech/Pagefind.svg";
+import PnpmIcon from "@/assets/icons/tech/Pnpm.svg";
+import ShikiIcon from "@/assets/icons/tech/Shiki.svg";
+import TailwindCSSIcon from "@/assets/icons/tech/TailwindCSS.svg";
+import TypeScriptIcon from "@/assets/icons/tech/TypeScript.svg";
+import ViteIcon from "@/assets/icons/tech/Vite.svg";
 
 const about = await getEntry("pages", "about");
 
@@ -13,6 +26,105 @@ if (!about) {
 }
 
 const { Content } = await render(about);
+
+const technologyStack = [
+  {
+    name: "Development",
+    items: [
+      { name: "Astro", detail: "Web Framework", Icon: AstroIcon },
+      {
+        name: "TypeScript",
+        detail: "Typed Language",
+        Icon: TypeScriptIcon,
+      },
+      {
+        name: "Tailwind CSS",
+        detail: "Utility CSS",
+        Icon: TailwindCSSIcon,
+      },
+      { name: "Vite", detail: "Build Tool", Icon: ViteIcon },
+    ],
+  },
+  {
+    name: "Content",
+    items: [
+      {
+        name: "Markdown / MDX",
+        detail: "Writing Format",
+        Icon: MdxIcon,
+        iconClass: "about-tech-icon-light",
+      },
+      { name: "Pagefind", detail: "Static Search", Icon: PagefindIcon },
+      { name: "KaTeX", detail: "Math Rendering", Icon: KaTeXIcon },
+      { name: "Shiki", detail: "Code Highlighting", Icon: ShikiIcon },
+    ],
+  },
+  {
+    name: "Motion",
+    items: [
+      {
+        name: "GSAP",
+        detail: "Animation",
+        Icon: GsapIcon,
+        iconClass: "about-tech-icon-gsap",
+      },
+      { name: "Lenis", detail: "Smooth Scroll", Icon: LenisIcon },
+    ],
+  },
+  {
+    name: "Environment",
+    items: [
+      { name: "Cloudflare", detail: "Deployment", Icon: CloudflareIcon },
+      { name: "pnpm", detail: "Package Manager", Icon: PnpmIcon },
+      {
+        name: "GitHub",
+        detail: "Source Control",
+        Icon: GitHubIcon,
+        iconClass: "about-tech-icon-light",
+      },
+    ],
+  },
+];
+
+const projectTimeline = [
+  {
+    date: "2026.09.10",
+    datetime: "2026-09-10",
+    title: "小屋启动",
+    description: "确定个人知识库方向，开始搭建站点与内容结构。",
+  },
+  {
+    date: "2026.09.16",
+    datetime: "2026-09-16",
+    title: "友链与导航",
+    description: "加入友链页面、分组导航与基础社交入口。",
+  },
+  {
+    date: "2026.09.19",
+    datetime: "2026-09-19",
+    title: "首批内容发布",
+    description: "发布第一批文章，并完成封面、移动导航与站点统计。",
+  },
+  {
+    date: "2026.09.20",
+    datetime: "2026-09-20",
+    title: "动效与部署",
+    description: "接入 GSAP、Lenis，并完善 Cloudflare 静态部署流程。",
+  },
+  {
+    date: "2026.09.26",
+    datetime: "2026-09-26",
+    title: "阅读体验重构",
+    description: "重做文章布局、目录、阅读设置、专注模式与开屏动画。",
+  },
+  {
+    date: "2026.09.27",
+    datetime: "2026-09-27",
+    title: "持续迭代",
+    description: "继续完善关于页、技术栈、捐赠区域与个人化内容。",
+    current: true,
+  },
+];
 ---
 
 <Layout
@@ -23,5 +135,154 @@ const { Content } = await render(about);
 >
   <Main pageTitle={about.data.title} class="app-prose">
     <Content />
+
+    <section class="about-extras" aria-label="关于本站的补充信息">
+      <section class="about-tech" aria-labelledby="technology-stack-title">
+        <div class="about-tech-section-heading">
+          <span class="about-section-kicker">STACK</span>
+          <h2 id="technology-stack-title" class="about-section-title">
+            技术栈
+          </h2>
+        </div>
+        <div class="about-tech-groups">
+          {
+            technologyStack.map(group => (
+              <details class="about-tech-group" open>
+                <summary>
+                  <h3>{group.name}</h3>
+                  <span class="about-details-icon" aria-hidden="true" />
+                </summary>
+                <div class="about-tech-tools">
+                  {group.items.map(item => {
+                    const Icon = item.Icon;
+                    return (
+                      <div class="about-tech-tool">
+                        <span
+                          class:list={["about-tech-icon", item.iconClass]}
+                          aria-hidden="true"
+                        >
+                          <Icon class="about-tech-logo" />
+                        </span>
+                        <span class="about-tech-copy">
+                          <strong>{item.name}</strong>
+                          <span>{item.detail}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="about-timeline" aria-labelledby="timeline-title">
+        <div class="about-section-heading">
+          <div>
+            <span class="about-section-kicker">HISTORY</span>
+            <h2 id="timeline-title">时间线</h2>
+          </div>
+          <p>从开始搭建，到成为持续维护的个人知识库。</p>
+        </div>
+
+        <ol class="about-timeline-list">
+          {
+            projectTimeline.map(item => (
+              <li
+                class:list={[
+                  "about-timeline-item",
+                  { "is-current": item.current },
+                ]}
+              >
+                <time datetime={item.datetime}>{item.date}</time>
+                <span class="about-timeline-marker" aria-hidden="true" />
+                <div class="about-timeline-copy">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      {
+        config.donation.enabled && (
+          <section class="about-donation" aria-labelledby="donation-title">
+            <div class="about-section-heading">
+              <div>
+                <span class="about-section-kicker">SUPPORT</span>
+                <h2 id="donation-title">Sponsorship</h2>
+              </div>
+            </div>
+
+            <p class="donation-intro">
+              Chinese methods:
+              <a
+                href="https://afdian.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Afdian
+              </a>
+              , Wechat or Alipay
+            </p>
+
+            <div class="donation-grid">
+              {config.donation.items.map(item => (
+                <button
+                  type="button"
+                  class="donation-card"
+                  data-donation-card
+                  aria-pressed="false"
+                  aria-label={`点击揭示${item.name}收款码`}
+                >
+                  <span class="donation-image-wrap">
+                    <img
+                      src={item.image}
+                      alt={`${item.name}收款码`}
+                      loading="lazy"
+                      class="donation-image"
+                      onerror="this.parentElement?.classList.add('is-missing'); this.remove()"
+                    />
+                    <span class="donation-image-fallback" aria-hidden="true">
+                      <span>待配置图片</span>
+                      <small>{item.image}</small>
+                    </span>
+                    <span class="donation-mask">
+                      <span class="donation-mask-icon" aria-hidden="true">
+                        {item.name === "微信支付" ? "微" : "支"}
+                      </span>
+                      <span class="donation-mask-label">点击揭示</span>
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )
+      }
+    </section>
   </Main>
 </Layout>
+
+<script>
+  function setupAboutExtras() {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-donation-card]")
+      .forEach(card => {
+        if (card.dataset.bound === "true") return;
+        card.dataset.bound = "true";
+
+        card.addEventListener("click", () => {
+          const revealed = card.dataset.revealed === "true";
+          card.dataset.revealed = String(!revealed);
+          card.setAttribute("aria-pressed", String(!revealed));
+        });
+      });
+  }
+
+  setupAboutExtras();
+  document.addEventListener("astro:after-swap", setupAboutExtras);
+</script>

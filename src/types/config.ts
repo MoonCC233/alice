@@ -126,12 +126,30 @@ interface HeroConfig {
   event?: HeroEventConfig;
 }
 
+interface DonationItem {
+  /** Display name for the donation method, e.g. "支付宝". */
+  name: string;
+  /** Image path under public/ or an absolute URL. */
+  image: string;
+  /** Optional supporting copy shown below the image. */
+  description?: string;
+}
+
+interface DonationConfig {
+  /** Show the donation section on the about page. Defaults to true. */
+  enabled?: boolean;
+  /** Donation images displayed as reveal-on-click cards. */
+  items?: DonationItem[];
+}
+
 interface AstroPaperConfig {
   site: SiteConfig;
   posts?: PostsConfig;
   features?: FeaturesConfig;
   /** Home hero sidebar (personal info + heatmap + countdowns) */
   hero?: HeroConfig;
+  /** Donation methods shown on the about page. */
+  donation?: DonationConfig;
   /** Social profile links shown in header/footer */
   socials?: SocialLink[];
   /** Share links shown on post detail pages */
@@ -139,7 +157,10 @@ interface AstroPaperConfig {
 }
 
 type ResolvedSiteConfig = Required<
-  Pick<SiteConfig, "url" | "title" | "description" | "author" | "lang" | "timezone" | "dir">
+  Pick<
+    SiteConfig,
+    "url" | "title" | "description" | "author" | "lang" | "timezone" | "dir"
+  >
 > &
   Pick<SiteConfig, "profile" | "googleVerification" | "location">;
 
@@ -153,6 +174,10 @@ export interface ResolvedAstroPaperConfig {
     avatar: string;
     since: string;
     event?: HeroEventConfig;
+  };
+  donation: {
+    enabled: boolean;
+    items: DonationItem[];
   };
   socials: SocialLink[];
   shareLinks: ShareLink[];

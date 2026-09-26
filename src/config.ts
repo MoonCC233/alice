@@ -39,6 +39,21 @@ const config: ResolvedAstroPaperConfig = {
     since: userConfig.hero?.since ?? "",
     event: userConfig.hero?.event,
   },
+  donation: {
+    enabled: userConfig.donation?.enabled ?? true,
+    items: userConfig.donation?.items ?? [
+      {
+        name: "支付宝",
+        image: "/donations/alipay.png",
+        description: "感谢你的支持",
+      },
+      {
+        name: "微信支付",
+        image: "/donations/wechat.png",
+        description: "感谢你的支持",
+      },
+    ],
+  },
 };
 
 export default config;

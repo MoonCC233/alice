@@ -35,6 +35,21 @@ export default defineAstroPaperConfig({
     since: "2026-09-10",
     event: { name: "中秋节", date: "2026-09-25" },
   },
+  donation: {
+    enabled: true,
+    items: [
+      {
+        name: "支付宝",
+        image: "/donations/alipay.png",
+        description: "感谢你的支持",
+      },
+      {
+        name: "微信支付",
+        image: "/donations/wechat.png",
+        description: "感谢你的支持",
+      },
+    ],
+  },
   socials: [
     // 微信没有「按 ID 加好友」的跳转协议，这个图标点击时复制微信号
     {

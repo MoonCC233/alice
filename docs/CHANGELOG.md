@@ -32,6 +32,10 @@ All notable changes to this project will be documented in this file.
 - The first two author-owned posts, each with a hand-written SVG cover in `public/covers` (1200×750, dark gradient with a faint grid, fading glyphs and a CJK title block). 《关于这个博客》 tells the site's origin — why write, why astro-paper, the stack, what changed on top of it. 《Markdown 语法与数学公式测试》 replaces the old KaTeX test post with a self-contained check-up that walks every supported Markdown construct, code block and formula in one pass, so a style change can be verified without hunting for a post that exercises the thing you touched
 - The 关于 page is rewritten from the theme's boilerplate into an actual bio: the author's background, what the blog records and how to reach them (GitHub, the copy-to-click WeChat entry, RSS)
 
+- About-page technology stack groups with local full-color SVG icons, independent animated expand/collapse controls, responsive layouts and reduced-motion support
+- A responsive project timeline on the About page covering the site's milestones from its initial launch through the current reading-experience and personalization work
+- A configurable About-page sponsorship section with Alipay and WeChat image cards that remove their privacy mask when clicked, including a graceful placeholder when an image has not been supplied
+
 ### Fixed
 
 - TOC scrollspy not initializing when the article page is loaded directly
