@@ -16,9 +16,6 @@ export default {
   post: {
     publishedAt: "发布于",
     updatedAt: "更新于",
-    sharePostIntro: "分享这篇文章：",
-    sharePostOn: "在{{platform}}上分享这篇文章",
-    sharePostViaEmail: "通过邮件分享这篇文章",
     tagLabel: "标签",
     backToTop: "回到顶部",
     toc: "目录",

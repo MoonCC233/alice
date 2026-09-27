@@ -85,22 +85,6 @@ type SocialLink = SocialLinkFields &
       }
   );
 
-interface ShareLink {
-  /**
-   * Must match an SVG filename in src/assets/icons/socials/.
-   * e.g. "facebook" → src/assets/icons/socials/facebook.svg
-   */
-  name: string;
-  /** Base share URL. The post URL will be appended as a query param. */
-  url: string;
-  /**
-   * Accessible label for the icon link (aria-label, title attribute).
-   * Auto-generated if omitted: "Share this post on Facebook", "Share this post via WhatsApp", etc.
-   * Override when the default wording doesn't fit.
-   */
-  linkTitle?: string;
-}
-
 /** A notable day shown with a countdown bar in the home hero. */
 interface HeroEventConfig {
   /** Event display name, e.g. "中秋节" */
@@ -152,8 +136,6 @@ interface AstroPaperConfig {
   donation?: DonationConfig;
   /** Social profile links shown in header/footer */
   socials?: SocialLink[];
-  /** Share links shown on post detail pages */
-  shareLinks?: ShareLink[];
 }
 
 type ResolvedSiteConfig = Required<
@@ -180,7 +162,6 @@ export interface ResolvedAstroPaperConfig {
     items: DonationItem[];
   };
   socials: SocialLink[];
-  shareLinks: ShareLink[];
 }
 
 /**

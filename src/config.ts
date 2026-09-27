@@ -31,7 +31,6 @@ const config: ResolvedAstroPaperConfig = {
     search: userConfig.features?.search ?? "pagefind",
   },
   socials: userConfig.socials ?? [],
-  shareLinks: userConfig.shareLinks ?? [],
   hero: {
     enabled: userConfig.hero?.enabled ?? true,
     role: userConfig.hero?.role ?? "",

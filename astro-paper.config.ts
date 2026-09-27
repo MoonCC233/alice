@@ -29,7 +29,7 @@ export default defineAstroPaperConfig({
   },
   hero: {
     enabled: true,
-    role: "[全干工程师 / 技术博主]",
+    role: "[游戏开发者 / 全栈开发者]",
     avatar:
       "https://q.qlogo.cn/headimg_dl?dst_uin=1721299119&spec=640&img_type=jpg",
     since: "2026-09-10",
@@ -59,13 +59,5 @@ export default defineAstroPaperConfig({
     },
     { name: "github",   url: "https://github.com/satnaing/astro-paper" },
     { name: "bilibili", url: "https://space.bilibili.com/000000000" },
-  ],
-  shareLinks: [
-    { name: "whatsapp", url: "https://wa.me/?text=" },
-    { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" },
-    { name: "x",        url: "https://x.com/intent/post?url=" },
-    { name: "telegram", url: "https://t.me/share/url?url=" },
-    { name: "pinterest", url: "https://pinterest.com/pin/create/button/?url=" },
-    { name: "mail",     url: "mailto:?subject=See%20this%20post&body=" },
   ],
 });
