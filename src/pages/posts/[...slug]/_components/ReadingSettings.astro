@@ -291,7 +291,7 @@ const copy = zh
 
   .reading-toolbar {
     display: grid;
-    width: 4.5rem;
+    width: var(--reader-settings-width);
     gap: 0.3rem;
     padding: 0.4rem;
     border: 1px solid var(--border);
@@ -557,7 +557,7 @@ const copy = zh
     white-space: nowrap;
   }
 
-  @media (max-width: 1023px) {
+  @media (max-width: 1279px) {
     .reading-left-rail {
       display: none;
     }

@@ -67,6 +67,7 @@ function toggleThemeWithReveal(event: Event, btn: HTMLElement): void {
   const reduceMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
+  const compactViewport = window.matchMedia("(max-width: 1023px)").matches;
 
   const doc = document as Document & {
     startViewTransition?: (callback: () => void) => {
@@ -75,7 +76,14 @@ function toggleThemeWithReveal(event: Event, btn: HTMLElement): void {
   };
 
   // Fallback: no View Transitions API or reduced motion → instant switch.
-  if (typeof doc.startViewTransition !== "function" || reduceMotion) {
+  // Root View Transitions can leave the new-document layer above the page on
+  // narrow mobile browsers. The theme still changes immediately and the
+  // button icons continue to update through the normal CSS state selectors.
+  if (
+    typeof doc.startViewTransition !== "function" ||
+    reduceMotion ||
+    compactViewport
+  ) {
     applyTheme(next);
     return;
   }

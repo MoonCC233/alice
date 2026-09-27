@@ -271,52 +271,47 @@ const wordCount = countWords(post.body);
       <Content />
     </article>
 
-    <hr class="my-8 border-dashed" />
+    <div class="post-reading-footer">
+      <hr class="my-8 border-dashed" />
 
-    <EditPost class="sm:hidden" {hideEditPost} {post} />
+      <EditPost class="sm:hidden" {hideEditPost} {post} />
 
-    <BackToTopButton />
+      <BackToTopButton />
 
-    <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
-      {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
-    </ul>
+      <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
+        {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
+      </ul>
 
-    <hr class="my-8 border-dashed" />
+      <hr class="my-8 border-dashed" />
 
-    <AdjacentPostNav {prevPost} {nextPost} />
+      <AdjacentPostNav {prevPost} {nextPost} />
+    </div>
   </main>
 </PostLayout>
 
 <style>
   :global(html) {
-    --reader-half-width: 22rem;
-    --reader-layout-gap: 1rem;
-    --reader-toc-width: 12.5rem;
-    --reader-rail-width: 4.5rem;
+    --reader-content-width: 44rem;
+    --reader-half-width: calc(var(--reader-content-width) / 2);
+    --reader-layout-gap: 0.5rem;
+    --reader-toc-width: 10rem;
+    --reader-rail-width: 4.25rem;
     --reader-settings-width: 4.25rem;
   }
 
   :global(html[data-reading-width="narrow"]) {
-    --reader-half-width: 19rem;
+    --reader-content-width: 38rem;
   }
 
   :global(html[data-reading-width="wide"]) {
-    --reader-half-width: min(33.5rem, calc(50vw - 19rem));
+    --reader-content-width: 48rem;
   }
 
   .post-reading-page {
     position: relative;
     margin-top: 2rem !important;
     padding-bottom: 5rem;
-    --post-reading-width: 44rem;
-  }
-
-  html[data-reading-width="narrow"] .post-reading-page {
-    --post-reading-width: 38rem;
-  }
-
-  html[data-reading-width="wide"] .post-reading-page {
-    --post-reading-width: 48rem;
+    --post-reading-width: var(--reader-content-width);
   }
 
   .post-reading-header {
@@ -521,41 +516,20 @@ const wordCount = countWords(post.body);
       line-height 260ms var(--ease-out-expo);
   }
 
-  @media (min-width: 1024px) and (max-width: 1439px) {
-    :global(html) {
-      --reader-half-width: 16rem;
-      --reader-layout-gap: 0.5rem;
-      --reader-toc-width: 10rem;
-      --reader-rail-width: 4.25rem;
-      --reader-settings-width: 4.25rem;
-    }
+  .post-reading-footer {
+    width: 100%;
+    max-width: var(--post-reading-width);
+    margin-inline: auto;
+    transition: max-width 320ms var(--ease-out-expo);
+  }
 
-    :global(html[data-reading-width="narrow"]) {
-      --reader-half-width: 15rem;
-    }
-
+  @media (min-width: 1280px) {
     :global(html[data-reading-width="wide"]) {
-      --reader-half-width: 17rem;
-    }
-
-    .post-reading-page {
-      --post-reading-width: 32rem;
-    }
-
-    html[data-reading-width="narrow"] .post-reading-page {
-      --post-reading-width: 30rem;
-    }
-
-    html[data-reading-width="wide"] .post-reading-page {
-      --post-reading-width: 34rem;
+      --reader-content-width: min(67rem, calc(100vw - 32rem));
     }
   }
 
   @media (min-width: 1440px) {
-    html[data-reading-width="wide"] .post-reading-page {
-      --post-reading-width: min(67rem, calc(100vw - 38rem));
-    }
-
     :global(#site-header),
     :global(#back-button) {
       opacity: 0;
@@ -618,6 +592,7 @@ const wordCount = countWords(post.body);
     .post-reading-header,
     .post-reading-cover,
     .post-reading-page :global(#article),
+    .post-reading-footer,
     .focus-mode-panel,
     .focus-mode-action {
       transition: none;

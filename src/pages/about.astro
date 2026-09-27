@@ -16,6 +16,8 @@ import ShikiIcon from "@/assets/icons/tech/Shiki.svg";
 import TailwindCSSIcon from "@/assets/icons/tech/TailwindCSS.svg";
 import TypeScriptIcon from "@/assets/icons/tech/TypeScript.svg";
 import ViteIcon from "@/assets/icons/tech/Vite.svg";
+import AlipayIcon from "@/assets/icons/socials/alipay.svg";
+import WechatIcon from "@/assets/icons/socials/wechat.svg";
 
 const about = await getEntry("pages", "about");
 
@@ -252,7 +254,11 @@ const projectTimeline = [
                     </span>
                     <span class="donation-mask">
                       <span class="donation-mask-icon" aria-hidden="true">
-                        {item.name === "微信支付" ? "微" : "支"}
+                        {item.name === "微信支付" ? (
+                          <WechatIcon class="donation-brand-icon" />
+                        ) : (
+                          <AlipayIcon class="donation-brand-icon" />
+                        )}
                       </span>
                       <span class="donation-mask-label">点击揭示</span>
                     </span>

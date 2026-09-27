@@ -537,6 +537,11 @@
   backdrop-filter: blur(3px);
 }
 
+.donation-brand-icon {
+  width: 2.8rem;
+  height: 2.8rem;
+}
+
 .donation-mask-icon::before {
   content: none;
 }
@@ -961,6 +966,16 @@ html[data-focus-mode="on"] .post-reading-header {
 
 html[data-focus-mode="on"] body {
   background-color: var(--background);
+}
+
+@media (max-width: 1023px) {
+  /* Mobile theme changes use an immediate CSS state update. Keep any UA view
+     transition layer from becoming a stale opaque sheet on narrow browsers. */
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
 }
 
 @media (max-width: 1279px) {

@@ -43,12 +43,12 @@ const config: ResolvedAstroPaperConfig = {
     items: userConfig.donation?.items ?? [
       {
         name: "支付宝",
-        image: "/donations/alipay.png",
+        image: "/sponsor/alipay.jpg",
         description: "感谢你的支持",
       },
       {
         name: "微信支付",
-        image: "/donations/wechat.png",
+        image: "/sponsor/wechat.jpg",
         description: "感谢你的支持",
       },
     ],

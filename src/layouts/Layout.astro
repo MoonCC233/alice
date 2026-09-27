@@ -13,6 +13,8 @@ type Props = {
   canonicalURL?: string;
   /** Renders the breadcrumb trail under the header (inner pages only). */
   breadcrumb?: boolean;
+  /** Keeps the global footer optional for immersive reading layouts. */
+  showFooter?: boolean;
 };
 
 const { site } = config;
@@ -22,6 +24,7 @@ const {
   description = site.description,
   canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
   breadcrumb = false,
+  showFooter = true,
 } = Astro.props;
 
 // rss.xml is a fixed file route, not a directory route — the locale helper
@@ -156,7 +159,7 @@ const rssHref = getAssetPath("rss.xml");
       <slot />
     </div>
 
-    <Footer />
+    {showFooter && <Footer />}
 
     <script is:inline>
       (function () {

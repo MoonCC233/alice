@@ -37,7 +37,7 @@ const items = tocItems.map(h => {
         id="toc-desktop"
         aria-label={t.post.toc}
         data-toc-total={items.length}
-        class="toc-shell fixed z-30 hidden lg:block"
+        class="toc-shell fixed z-30 hidden xl:block"
       >
         <div class="toc-heading">
           <div class="toc-heading-copy min-w-0">
@@ -91,7 +91,7 @@ const items = tocItems.map(h => {
       {/* Mobile: collapsible TOC above the article */}
       <details
         id="toc-mobile"
-        class="toc-mobile animate-fade-up mt-6 mb-6 lg:hidden"
+        class="toc-mobile animate-fade-up mt-6 mb-6 xl:hidden"
       >
         <summary class="toc-mobile-summary flex cursor-pointer items-center justify-between gap-4 select-none">
           <span class="min-w-0">
@@ -450,7 +450,7 @@ const items = tocItems.map(h => {
     }
 
     window.addEventListener("reading:toggle-toc", () => {
-      if (desktopToc && window.matchMedia("(min-width: 1024px)").matches) {
+      if (desktopToc && window.matchMedia("(min-width: 1280px)").matches) {
         setTocCollapsed(!desktopToc.hasAttribute("data-collapsed"));
         return;
       }
