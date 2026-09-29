@@ -145,7 +145,7 @@ const islandCountdownText = islandHasCountdown
         aria-label={site.title}
       >
         <ul class="relative flex items-center gap-0.5">
-          <!-- Sliding dark indicator behind the hovered/active nav item -->
+          <!-- Sliding dark indicator behind the active nav item -->
           <span
             aria-hidden="true"
             class="absolute inset-y-0 left-0 z-0 rounded-md opacity-0"
@@ -577,10 +577,6 @@ const islandCountdownText = islandHasCountdown
     color: var(--background);
   }
 
-  .nav-item:hover:not(.nav-inverted) {
-    color: var(--foreground);
-  }
-
   /* Click feedback: icon squashes while the item is pressed. */
   .nav-item .nav-icon {
     transition:
@@ -952,10 +948,10 @@ const islandCountdownText = islandHasCountdown
       });
   }
 
-  // The nav item for the page you are already on keeps its <a> markup, hover
-  // glide and click feedback, but must not navigate — clicking it would just
-  // reload the same page. Blocked here rather than in CSS so the item stays
-  // fully interactive apart from the navigation itself.
+  // The nav item for the page you are already on keeps its <a> markup and
+  // click feedback, but must not navigate — clicking it would just reload the
+  // same page. Blocked here rather than in CSS so the item stays fully
+  // interactive apart from the navigation itself.
   function guardNavClicks() {
     const header = document.getElementById("site-header");
     if (!header || header.dataset.navGuard === "true") return;
@@ -1429,8 +1425,9 @@ const islandCountdownText = islandHasCountdown
     });
   }
 
-  // Sliding nav indicator: a dark pill that glides to the hovered item
-  // and settles back on the active one when the pointer leaves.
+  // Sliding nav indicator: a dark pill that glides onto the active item when
+  // the page (or the open submenu) changes. Pointer hover deliberately does
+  // not move it.
   function setupNavIndicator() {
     const nav = document.getElementById("site-nav");
     const indicator = document.getElementById("nav-indicator");
@@ -1440,7 +1437,6 @@ const islandCountdownText = islandHasCountdown
       nav.dataset.bound = "true";
 
       nav.querySelectorAll<HTMLElement>(".nav-item").forEach(item => {
-        item.addEventListener("mouseenter", () => moveIndicator(item));
         // Click pop: replay the indicator bounce animation.
         item.addEventListener("click", () => {
           indicator.classList.remove("indicator-pop");
@@ -1450,13 +1446,6 @@ const islandCountdownText = islandHasCountdown
       });
       indicator.addEventListener("animationend", () => {
         indicator.classList.remove("indicator-pop");
-      });
-      nav.addEventListener("mouseleave", () => {
-        // While a submenu is open the pointer often leaves the nav through the
-        // gap between the button and the panel; settling the pill back then
-        // would make it flicker away from the open group.
-        if (nav.querySelector('[aria-expanded="true"]')) return;
-        updateHeaderActive();
       });
 
       setupNavGroups(nav);

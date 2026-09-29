@@ -88,6 +88,14 @@ function toggleThemeWithReveal(event: Event, btn: HTMLElement): void {
     return;
   }
 
+  // Fold any other named transition back into the root for the duration of the
+  // switch (the [data-theme-switching] rule in global.css). Set before the
+  // transition starts so the outgoing snapshot is folded in as well; both
+  // captures land before `ready` resolves, so dropping it there is safe.
+  const rootEl = document.documentElement;
+  rootEl.setAttribute("data-theme-switching", "");
+  const unfold = () => rootEl.removeAttribute("data-theme-switching");
+
   const transition = doc.startViewTransition(() => applyTheme(next));
 
   transition.ready
@@ -104,9 +112,11 @@ function toggleThemeWithReveal(event: Event, btn: HTMLElement): void {
           pseudoElement: "::view-transition-new(root)",
         }
       );
+      unfold();
     })
     .catch(() => {
       // Transition skipped/interrupted — theme has already been applied.
+      unfold();
     });
 }
 

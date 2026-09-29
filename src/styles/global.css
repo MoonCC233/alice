@@ -643,6 +643,17 @@
   mix-blend-mode: normal;
 }
 
+/* While the reveal runs, fold every other named transition back into the root.
+   A named element gets its own snapshot pair, which the browser paints *above*
+   ::view-transition-new(root) and cross-fades on the UA's own schedule: the
+   title, cover and tag pills of a post page would therefore fade in the
+   incoming theme's colours over the part of the page the circle has not reached
+   yet. `!important` because those names are inline styles. The document element
+   is excluded — it owns the root snapshot the clip-path animates. */
+html[data-theme-switching] *:not(html) {
+  view-transition-name: none !important;
+}
+
 /* Smooth anchor scrolling (TOC jumps), offset for the sticky header. */
 html {
   scroll-behavior: smooth;
