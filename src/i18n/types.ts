@@ -62,6 +62,38 @@ export interface UIStrings {
     eventCountdown: string;
     heatmapAria: string;
   };
+  tags: {
+    graphHint: string;
+    graphAria: string;
+    nodeTooltip: string;
+    summary: string;
+    empty: string;
+    viewLabel: string;
+    viewGraph: string;
+    viewList: string;
+    listSorted: string;
+    settings: {
+      open: string;
+      title: string;
+      groupPalette: string;
+      paletteMono: string;
+      paletteMuted: string;
+      paletteVivid: string;
+      paletteHint: string;
+    };
+  };
+  archives: {
+    overviewPosts: string;
+    overviewTags: string;
+    overviewWords: string;
+    trendTitle: string;
+    trendHint: string;
+    trendTooltip: string;
+    trendEmpty: string;
+    trendAria: string;
+    yearJump: string;
+    postUnit: string;
+  };
   footer: {
     copyright: string;
     allRightsReserved: string;

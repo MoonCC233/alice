@@ -1,0 +1,673 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import IconAdjustments from "@/assets/icons/IconAdjustments.svg";
+import IconHash from "@/assets/icons/IconHash.svg";
+import type { TagGraph } from "@/utils/getTagGraph";
+import { useTranslations, tplStr } from "@/i18n";
+import config from "@/config";
+
+type Props = {
+  graph: TagGraph;
+  postCount: number;
+};
+
+const { graph, postCount } = Astro.props;
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+const s = t.tags.settings;
+
+// Resolve tag URLs at build time so the client script never builds paths.
+const nodes = graph.nodes.map(node => ({
+  ...node,
+  url: getRelativeLocaleUrl(locale, `tags/${node.id}/`),
+}));
+
+// Same ordering as the graph's node list, ranked for the list view.
+const ranked = [...nodes].sort(
+  (a, b) => b.count - a.count || a.name.localeCompare(b.name)
+);
+
+const payload = JSON.stringify({
+  nodes,
+  links: graph.links,
+  maxCount: graph.maxCount,
+  maxWeight: graph.maxWeight,
+  clusterCount: graph.clusterCount,
+});
+
+const nodeLabel = (name: string, count: number) =>
+  tplStr(t.tags.nodeTooltip, { name, count });
+
+const ariaLabel = tplStr(t.tags.graphAria, {
+  tags: nodes.length,
+  links: graph.links.length,
+});
+
+const palettes = [
+  { value: "mono", label: s.paletteMono },
+  { value: "muted", label: s.paletteMuted },
+  { value: "vivid", label: s.paletteVivid },
+];
+
+const views = [
+  { value: "graph", label: t.tags.viewGraph },
+  { value: "list", label: t.tags.viewList },
+];
+---
+
+<div class="surface-panel card-in rounded-xl p-4 sm:p-7">
+  <div class="tag-views" id="tag-views">
+    <!--
+      Decide the view before first paint: the stylesheet keys off `data-view`,
+      and without a stored choice it falls back to the list on narrow screens.
+    -->
+    <script is:inline>
+      (function () {
+        var wrap = document.getElementById("tag-views");
+        if (!wrap) return;
+        var stored = null;
+        try {
+          stored = localStorage.getItem("tag-graph-view");
+        } catch (e) {
+          // Storage blocked: keep the stylesheet's breakpoint default.
+        }
+        if (stored === "graph" || stored === "list") {
+          wrap.dataset.view = stored;
+        }
+      })();
+    </script>
+
+    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div class="tag-views-switch" role="group" aria-label={t.tags.viewLabel}>
+        {
+          views.map(view => (
+            <button
+              type="button"
+              class="tag-views-option"
+              data-tag-view={view.value}
+              aria-pressed="false"
+            >
+              {view.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <div class="tag-graph-only flex items-center gap-2">
+        <span class="text-muted-foreground hidden text-xs sm:inline">
+          {t.tags.graphHint}
+        </span>
+        {
+          nodes.length > 0 && (
+            <button
+              type="button"
+              class="tag-settings-open"
+              data-tag-settings-open
+              aria-controls="tag-settings-panel"
+              aria-expanded="false"
+              aria-label={s.open}
+              title={s.open}
+            >
+              <IconAdjustments class="size-4" aria-hidden="true" />
+            </button>
+          )
+        }
+      </div>
+    </div>
+
+    {
+      nodes.length > 0 && (
+        <div id="tag-settings-panel" class="tag-settings" data-tag-settings hidden>
+          <p class="tag-settings-title">{s.title}</p>
+          <div class="tag-settings-body">
+            <fieldset class="tag-settings-group">
+              <legend>{s.groupPalette}</legend>
+              <div class="tag-settings-segments">
+                {palettes.map(palette => (
+                  <button
+                    type="button"
+                    class="tag-settings-segment"
+                    data-palette-option={palette.value}
+                    aria-pressed="false"
+                  >
+                    {palette.label}
+                  </button>
+                ))}
+              </div>
+              <p class="tag-settings-note">{s.paletteHint}</p>
+            </fieldset>
+          </div>
+        </div>
+      )
+    }
+
+    {
+      nodes.length > 0 ? (
+        <>
+          <div class="tag-view-graph">
+            <div
+              class="tag-graph"
+              data-tag-graph
+              data-graph={payload}
+              data-label={t.tags.nodeTooltip}
+            >
+              <svg class="tag-graph-svg" role="img" aria-label={ariaLabel} />
+            </div>
+          </div>
+
+          <div class="tag-view-list">
+            <p class="tag-view-note">{t.tags.listSorted}</p>
+            <ol class="tag-rank">
+              {ranked.map(tag => (
+                <li>
+                  <a class="tag-row" href={tag.url}>
+                    <span class="tag-row-name">
+                      <IconHash class="size-3.5 shrink-0 opacity-60" />
+                      {tag.name}
+                    </span>
+                    <span class="tag-row-track" aria-hidden="true">
+                      <span
+                        class="tag-row-fill"
+                        style={`--fill:${Math.max(6, Math.round((tag.count / graph.maxCount) * 100))}`}
+                      />
+                    </span>
+                    <span class="tag-row-count">{tag.count}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <ul class="sr-only">
+            {nodes.map(node => (
+              <li>
+                <a href={node.url}>{nodeLabel(node.name, node.count)}</a>
+              </li>
+            ))}
+          </ul>
+
+          {/* No JS: neither view is switchable, so give a plain list. */}
+          <noscript>
+            <ul class="tag-graph-plain">
+              {nodes.map(node => (
+                <li>
+                  <a href={node.url}>{nodeLabel(node.name, node.count)}</a>
+                </li>
+              ))}
+            </ul>
+          </noscript>
+        </>
+      ) : (
+        <p class="text-muted-foreground mt-4 text-sm">{t.tags.empty}</p>
+      )
+    }
+  </div>
+
+  <p class="border-border text-muted-foreground mt-5 border-t pt-4 text-xs">
+    {tplStr(t.tags.summary, { tags: nodes.length, posts: postCount })}
+  </p>
+</div>
+
+<style>
+  /* --- View switching ---------------------------------------------------- */
+
+  /* Without `data-view` (no JS, or no stored choice before the bootstrap
+     script runs) the breakpoint decides: list on phones, graph above. */
+  @media (max-width: 40rem) {
+    .tag-views:not([data-view]) .tag-graph-only,
+    .tag-views:not([data-view]) .tag-view-graph {
+      display: none;
+    }
+  }
+
+  @media (min-width: 40.001rem) {
+    .tag-views:not([data-view]) .tag-view-list {
+      display: none;
+    }
+  }
+
+  .tag-views[data-view="list"] .tag-graph-only,
+  .tag-views[data-view="list"] .tag-view-graph {
+    display: none;
+  }
+
+  .tag-views[data-view="graph"] .tag-view-list {
+    display: none;
+  }
+
+  .tag-views-switch {
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .tag-views-option {
+    padding: 0.35rem 0.9rem;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .tag-views-option + .tag-views-option {
+    border-left: 1px solid var(--border);
+  }
+
+  .tag-views-option:hover {
+    color: var(--foreground);
+  }
+
+  .tag-views-option[aria-pressed="true"] {
+    background: var(--foreground);
+    color: var(--background);
+  }
+
+  /* --- Graph view -------------------------------------------------------- */
+
+  /* Graph paper: a faint line grid marking the canvas the tags are laid out
+     on. `overflow: hidden` keeps the layout (which the bounds force holds
+     inside the padding) from spilling over the border. */
+  .tag-graph {
+    position: relative;
+    /* Tall enough on a phone that labels do not collide once the layout is
+       scaled down to the container width. */
+    height: clamp(20rem, 62vw, 26rem);
+    margin-top: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--surface) 60%, transparent);
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--foreground) 8%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--foreground) 8%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 26px 26px;
+  }
+
+  .tag-graph-plain {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+  }
+
+  .tag-graph-plain a {
+    color: var(--foreground);
+  }
+
+  .tag-settings-open {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--muted-foreground);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .tag-settings-open:hover {
+    border-color: var(--foreground);
+    color: var(--foreground);
+  }
+
+  @media (min-width: 40rem) {
+    .tag-settings-open {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+  }
+
+  /* --- Settings panel ---------------------------------------------------- */
+
+  /* In flow rather than a modal: it opens between the header and the canvas,
+     so the graph stays visible while the colours are changed. */
+  .tag-settings {
+    margin-top: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background-color: color-mix(in srgb, var(--surface-strong) 55%, transparent);
+    animation: tag-settings-reveal 0.3s var(--ease-out-expo);
+  }
+
+  /* `hidden` has to be reasserted because the panel is otherwise display: grid. */
+  .tag-settings[hidden] {
+    display: none;
+  }
+
+  @keyframes tag-settings-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  .tag-settings-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* Kept compact so the controls do not stretch across a wide panel. */
+  .tag-settings-body {
+    display: grid;
+    gap: 1rem;
+    max-width: 22rem;
+    margin-top: 0.75rem;
+  }
+
+  .tag-settings-group {
+    display: grid;
+    gap: 0.85rem;
+    border: 0;
+    padding: 0;
+    min-inline-size: 0;
+  }
+
+  .tag-settings-group legend {
+    padding: 0;
+    color: var(--muted-foreground);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .tag-settings-segments {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .tag-settings-segment {
+    padding: 0.6rem 0.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .tag-settings-segment + .tag-settings-segment {
+    border-left: 1px solid var(--border);
+  }
+
+  .tag-settings-segment:hover {
+    color: var(--foreground);
+  }
+
+  .tag-settings-segment[aria-pressed="true"] {
+    background: var(--foreground);
+    color: var(--background);
+    font-weight: 600;
+  }
+
+  .tag-settings-note {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+
+  /* --- List view --------------------------------------------------------- */
+
+  .tag-view-note {
+    margin-top: 1rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+  }
+
+  .tag-rank {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Placement is explicit: auto-flow would push the count below the bar once
+     the full-width track wraps onto its own row. */
+  .tag-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .tag-row:hover {
+    background-color: color-mix(in srgb, var(--foreground) 6%, transparent);
+  }
+
+  .tag-row-name {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--foreground);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .tag-row:hover .tag-row-name {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .tag-row-count {
+    grid-area: 1 / 2;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tag-row-track {
+    grid-area: 2 / 1 / 3 / -1;
+    display: block;
+    height: 6px;
+    border-radius: 999px;
+    background-color: var(--muted);
+    overflow: hidden;
+  }
+
+  .tag-row-fill {
+    display: block;
+    width: calc(var(--fill, 0) * 1%);
+    height: 100%;
+    border-radius: 999px;
+    background-color: var(--foreground);
+    transform-origin: left center;
+    animation: tag-fill-in 0.6s var(--ease-out-expo) backwards;
+  }
+
+  @keyframes tag-fill-in {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @media (min-width: 40rem) {
+    .tag-row {
+      grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 2rem;
+    }
+
+    .tag-row-name {
+      grid-area: 1 / 1;
+    }
+
+    .tag-row-track {
+      grid-area: 1 / 2;
+    }
+
+    .tag-row-count {
+      grid-area: 1 / 3;
+      text-align: right;
+    }
+  }
+
+  .card-in {
+    animation: tag-graph-card-in 0.55s var(--ease-out-expo) backwards;
+  }
+
+  @keyframes tag-graph-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-in,
+    .tag-settings,
+    .tag-row-fill {
+      animation: none;
+    }
+  }
+</style>
+
+<!--
+  Global, not scoped: every element below is created by d3 at runtime, so it
+  never carries Astro's scoping attribute. Namespaced under `.tag-graph`.
+-->
+<style is:global>
+  .tag-graph-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .tag-graph .tag-link {
+    stroke: var(--foreground);
+    stroke-opacity: 0.16;
+    transition: stroke-opacity 0.2s ease;
+  }
+
+  .tag-graph .tag-link.is-active {
+    stroke-opacity: 0.7;
+  }
+
+  .tag-graph .tag-link.is-dim {
+    stroke-opacity: 0.05;
+  }
+
+  .tag-graph .tag-node {
+    cursor: grab;
+    /* Lets a node be dragged on touch without scrolling the page, while the
+       empty area around the nodes still scrolls normally. */
+    touch-action: none;
+    /* Touch and focus must not paint anything around the dot: WebKit
+       otherwise draws a highlight box on the anchor's bounding box. */
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.2s ease;
+  }
+
+  .tag-graph .tag-node:active {
+    cursor: grabbing;
+  }
+
+  /*
+    Three palettes off one hue: `--hue` is set per node from its
+    co-occurrence group. Nodes stay solid — no stroke and no outline, so
+    nothing draws a ring around a tag when it is hovered, dragged or focused.
+  */
+  .tag-graph .tag-node-dot {
+    fill: var(--foreground);
+    stroke: none;
+    transition: fill 0.2s ease;
+  }
+
+  .tag-graph[data-palette="muted"] .tag-node-dot {
+    fill: hsl(var(--hue, 0) 18% 46%);
+  }
+
+  .tag-graph[data-palette="vivid"] .tag-node-dot {
+    fill: hsl(var(--hue, 0) 72% 46%);
+  }
+
+  [data-theme="dark"] .tag-graph[data-palette="muted"] .tag-node-dot {
+    fill: hsl(var(--hue, 0) 22% 64%);
+  }
+
+  [data-theme="dark"] .tag-graph[data-palette="vivid"] .tag-node-dot {
+    fill: hsl(var(--hue, 0) 70% 62%);
+  }
+
+  .tag-graph .tag-node-label {
+    fill: var(--muted-foreground);
+    font-size: 11.5px;
+    font-weight: 500;
+    text-anchor: middle;
+    transition: fill 0.2s ease;
+  }
+
+  .tag-graph .tag-node-count {
+    fill: var(--muted-foreground);
+    font-size: 10px;
+    text-anchor: middle;
+    opacity: 0.75;
+  }
+
+  /* Highlight without drawing attention to the node itself: the label lifts
+     and every unrelated tag recedes. */
+  .tag-graph .tag-node:hover .tag-node-label,
+  .tag-graph .tag-node.is-active .tag-node-label {
+    fill: var(--foreground);
+  }
+
+  .tag-graph .tag-node.is-dim {
+    opacity: 0.2;
+  }
+
+  .tag-graph .tag-node:focus,
+  .tag-graph .tag-node:focus-visible {
+    outline: none;
+  }
+
+  /* Smaller labels on phones, where the scaled-down layout is tighter. */
+  @media (max-width: 30rem) {
+    .tag-graph .tag-node-label {
+      font-size: 10.5px;
+    }
+
+    .tag-graph .tag-node-count {
+      font-size: 9.5px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tag-graph .tag-link,
+    .tag-graph .tag-node,
+    .tag-graph .tag-node-dot,
+    .tag-graph .tag-node-label {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { initTagGraphs } from "@/scripts/tagGraph";
+
+  initTagGraphs();
+  document.addEventListener("astro:page-load", initTagGraphs);
+</script>

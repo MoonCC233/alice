@@ -1,0 +1,334 @@
+---
+import type { ArchiveOverview } from "@/utils/getArchiveData";
+import { useTranslations, tplStr } from "@/i18n";
+import config from "@/config";
+
+type Props = {
+  overview: ArchiveOverview;
+};
+
+const { overview } = Astro.props;
+const { months, years, maxCount, stats } = overview;
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+
+const compact = new Intl.NumberFormat(locale, {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+const statItems = [
+  { key: "posts", label: t.archives.overviewPosts, value: String(stats.totalPosts) },
+  { key: "tags", label: t.archives.overviewTags, value: String(stats.totalTags) },
+  { key: "words", label: t.archives.overviewWords, value: compact.format(stats.totalWords) },
+];
+
+const monthLabel = (year: number, month: number) =>
+  `${year}.${String(month).padStart(2, "0")}`;
+
+const first = months.at(0);
+const last = months.at(-1);
+const rangeStart = first ? monthLabel(first.year, first.month) : "";
+const rangeEnd = last ? monthLabel(last.year, last.month) : "";
+const rangeLabel = rangeStart && rangeEnd ? `${rangeStart} — ${rangeEnd}` : "";
+
+// Bars are scaled against the busiest month; quiet months keep a small stub so
+// the axis still reads as a continuous timeline. The height percentage is
+// passed as a unitless custom property because a literal `%` in a `style`
+// attribute is escaped by the Astro compiler.
+const bars = months.map((entry, index) => ({
+  ...entry,
+  label: monthLabel(entry.year, entry.month),
+  percent: Math.max(8, Math.round((entry.count / maxCount) * 100)),
+  delay: Math.min(index * 14, 640),
+}));
+---
+
+<section class="surface-panel card-in rounded-xl p-5 sm:p-7">
+  <dl class="archive-stats">
+    {
+      statItems.map(item => (
+        <div class="archive-stat">
+          <dt class="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">
+            {item.label}
+          </dt>
+          <dd class="mt-1.5 text-2xl font-semibold tabular-nums sm:text-3xl">
+            {item.value}
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <div class="mt-6 border-t border-border pt-5">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <p
+        class="flex items-baseline gap-2 text-sm font-semibold tracking-[0.08em] uppercase"
+      >
+        {t.archives.trendTitle}
+        <span class="text-muted-foreground text-xs font-normal tabular-nums">
+          {rangeLabel}
+        </span>
+      </p>
+      <span class="text-muted-foreground text-xs">{t.archives.trendHint}</span>
+    </div>
+
+    {
+      bars.length > 0 ? (
+        <div class="mt-4" data-trend>
+          <div
+            class="archive-trend-plot"
+            style={`--trend-cols:${bars.length}`}
+            role="img"
+            aria-label={tplStr(t.archives.trendAria, {
+              from: rangeStart,
+              to: rangeEnd,
+              count: stats.totalPosts,
+            })}
+            data-tooltip={t.archives.trendTooltip}
+            data-empty={t.archives.trendEmpty}
+          >
+            {bars.map(bar => (
+              <span class="archive-trend-slot" data-label={bar.label} data-count={bar.count}>
+                <span
+                  class:list={[
+                    "archive-trend-bar",
+                    bar.count === 0 && "is-empty",
+                  ]}
+                  style={`--bar-h:${bar.percent};animation-delay:${bar.delay}ms`}
+                />
+              </span>
+            ))}
+          </div>
+
+          <div
+            class="archive-trend-axis"
+            style={`--trend-cols:${bars.length}`}
+            aria-hidden="true"
+          >
+            {years.map(year => (
+              <span
+                class="archive-trend-year"
+                style={`grid-column:span ${year.span}`}
+              >
+                {year.year}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p class="text-muted-foreground mt-4 text-sm">{t.archives.trendEmpty}</p>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .archive-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  /* Plot and axis share one grid so a year label spans exactly the bars above
+     it, including the inner gaps. */
+  .archive-trend-plot,
+  .archive-trend-axis {
+    display: grid;
+    grid-template-columns: repeat(var(--trend-cols), minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  /* One implicit row, stretched to the container height, so each slot has a
+     definite height for the bar's percentage to resolve against. */
+  .archive-trend-plot {
+    height: 7.5rem;
+  }
+
+  .archive-trend-slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    min-height: 0;
+  }
+
+  /* Hover track, sized to the bar rather than the whole column so a short
+     history doesn't light up the full width. Painted under the bar. */
+  .archive-trend-slot::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 50%;
+    width: 100%;
+    max-width: 3rem;
+    border-radius: 4px;
+    transform: translateX(-50%);
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  .archive-trend-slot:hover::before {
+    background-color: color-mix(in srgb, var(--foreground) 7%, transparent);
+  }
+
+  .archive-trend-bar {
+    width: 100%;
+    /* Cap the width so a short history (one or two months) doesn't render one
+       full-width slab; long histories are already narrower than this. */
+    max-width: 3rem;
+    height: calc(var(--bar-h, 100) * 1%);
+    border-radius: 3px 3px 0 0;
+    background-color: var(--foreground);
+    transform-origin: bottom;
+    transition: opacity 0.2s ease;
+    animation: archive-bar-in 0.5s var(--ease-out-expo) backwards;
+  }
+
+  /* Quiet months keep a barely-there stub rather than a scaled bar. */
+  .archive-trend-bar.is-empty {
+    height: 3px;
+    background-color: var(--muted);
+  }
+
+  /* Focus the hovered month: fade siblings only while the plot is hovered, so
+     the resting state stays at full contrast. */
+  .archive-trend-plot:hover .archive-trend-bar {
+    opacity: 0.3;
+  }
+
+  .archive-trend-plot .archive-trend-slot:hover .archive-trend-bar {
+    opacity: 1;
+  }
+
+  .archive-trend-axis {
+    margin-top: 0.5rem;
+  }
+
+  .archive-trend-year {
+    color: var(--muted-foreground);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    line-height: 1;
+  }
+
+  @keyframes archive-bar-in {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  .card-in {
+    animation: archive-card-in 0.55s var(--ease-out-expo) backwards;
+  }
+
+  @keyframes archive-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .archive-trend-bar,
+    .card-in {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  // Month tooltip. Same fixed-position, event-delegation shape as the hero
+  // heatmap, so it survives Astro View Transitions without re-binding.
+  function setupArchiveTrendTip() {
+    const plot = document.querySelector<HTMLElement>("[data-trend] .archive-trend-plot");
+    if (!plot || plot.dataset.tipBound === "true") return;
+    plot.dataset.tipBound = "true";
+
+    let tip = document.getElementById("archive-trend-tip") as HTMLDivElement | null;
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.id = "archive-trend-tip";
+      tip.className =
+        "bg-foreground text-background pointer-events-none fixed top-0 left-0 z-50 rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap opacity-0 shadow-lg will-change-transform duration-150 ease-out transition-[opacity,transform]";
+      document.body.appendChild(tip);
+    }
+
+    const template = plot.dataset.tooltip ?? "{{month}} · {{count}}";
+    const emptyText = plot.dataset.empty ?? "";
+    const tipEl = tip;
+
+    const fill = (tpl: string, vars: Record<string, string | number>) =>
+      tpl.replace(/\{\{(\w+)\}\}/g, (_, key: string) =>
+        vars[key] !== undefined ? String(vars[key]) : ""
+      );
+
+    let lastSlot: HTMLElement | null = null;
+    // Cache tip size; re-measure only when the text changes so pointermove
+    // never forces a synchronous layout read.
+    let tipW = 0;
+    let tipH = 0;
+
+    const moveTo = (slot: HTMLElement, cursorX: number) => {
+      const rect = slot.getBoundingClientRect();
+      const pad = 8;
+      // Follow the cursor, but stay anchored to the hovered slot.
+      let x = cursorX - tipW / 2;
+      x = Math.max(Math.min(x, rect.right - tipW), rect.left);
+      x = Math.max(pad, Math.min(x, window.innerWidth - tipW - pad));
+      let y = rect.top - tipH - 8;
+      if (y < pad) y = rect.bottom + 8; // flip below when there's no room
+      tipEl.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`;
+    };
+
+    const syncText = (slot: HTMLElement) => {
+      if (slot === lastSlot) return;
+      lastSlot = slot;
+      const count = Number(slot.dataset.count ?? 0);
+      tipEl.textContent =
+        count === 0
+          ? `${slot.dataset.label ?? ""} · ${emptyText}`
+          : fill(template, { month: slot.dataset.label ?? "", count });
+      tipW = tipEl.offsetWidth;
+      tipH = tipEl.offsetHeight;
+    };
+
+    const slotFrom = (target: EventTarget | null) =>
+      (target as HTMLElement | null)?.closest<HTMLElement>(".archive-trend-slot") ?? null;
+
+    plot.addEventListener("pointerover", event => {
+      const slot = slotFrom(event.target);
+      if (!slot) return;
+      syncText(slot);
+      if (tipEl.style.opacity !== "1") {
+        // First show: place instantly instead of gliding from the old spot.
+        const prevTransition = tipEl.style.transition;
+        tipEl.style.transition = "opacity 0.15s ease";
+        moveTo(slot, event.clientX);
+        tipEl.style.opacity = "1";
+        requestAnimationFrame(() => {
+          tipEl.style.transition = prevTransition;
+        });
+      } else {
+        moveTo(slot, event.clientX);
+      }
+    });
+
+    plot.addEventListener("pointermove", event => {
+      const slot = slotFrom(event.target);
+      if (!slot || tipEl.style.opacity !== "1") return;
+      syncText(slot);
+      moveTo(slot, event.clientX);
+    });
+
+    plot.addEventListener("pointerleave", () => {
+      lastSlot = null;
+      tipEl.style.opacity = "0";
+    });
+  }
+
+  setupArchiveTrendTip();
+  document.addEventListener("astro:after-swap", setupArchiveTrendTip);
+</script>

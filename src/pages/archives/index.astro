@@ -4,8 +4,10 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Main from "@/components/Main.astro";
 import Card from "@/components/Card.astro";
+import ArchiveOverview from "@/components/ArchiveOverview.astro";
 import { postFilter } from "@/utils/postFilter";
 import { getPostsByGroupCondition } from "./_utils/getPostsByGroupCondition";
+import { getArchiveOverview } from "@/utils/getArchiveData";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
 
@@ -22,6 +24,17 @@ const t = useTranslations(locale);
 const posts = await getCollection("posts");
 const filteredPosts = posts.filter(postFilter);
 const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
+
+const overview = getArchiveOverview(filteredPosts);
+
+// Groups and the trend chart share one filtered collection, so counts agree.
+const yearGroups = Object.entries(
+  getPostsByGroupCondition(filteredPosts, post =>
+    post.data.pubDatetime.getFullYear()
+  )
+).sort(([yearA], [yearB]) => Number(yearB) - Number(yearA));
+
+const yearNav = overview.years.filter(year => year.count > 0).reverse();
 ---
 
 <Layout
@@ -29,17 +42,33 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
   breadcrumb
 >
   <Main pageTitle={t.pages.archivesTitle} pageDesc={t.pages.archivesDesc}>
+    <ArchiveOverview {overview} />
+
     {
-      Object.entries(
-        getPostsByGroupCondition(filteredPosts, post =>
-          post.data.pubDatetime.getFullYear()
-        )
+      yearNav.length > 1 && (
+        <nav class="archive-years" aria-label={t.archives.yearJump}>
+          {yearNav.map(year => (
+            <a class="archive-year-chip" href={`#year-${year.year}`}>
+              {year.year}
+              <span>{year.count}</span>
+            </a>
+          ))}
+        </nav>
       )
-        .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
-        .map(([year, yearGroup]) => (
-          <div>
-            <span class="text-2xl font-bold">{year}</span>
-            <sup class="text-muted-foreground text-sm">{yearGroup.length}</sup>
+    }
+
+    <div class="archive-timeline">
+      {
+        yearGroups.map(([year, yearGroup]) => (
+          <section id={`year-${year}`} class="archive-year">
+            <div class="archive-year-head">
+              <h2 class="archive-year-title">
+                {year}
+                <sup>{yearGroup.length}</sup>
+              </h2>
+              <span class="archive-year-rule" aria-hidden="true" />
+            </div>
+
             {Object.entries(
               getPostsByGroupCondition(
                 yearGroup,
@@ -48,27 +77,19 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
             )
               .sort(([monthA], [monthB]) => Number(monthB) - Number(monthA))
               .map(([month, monthGroup]) => (
-                <div class="flex flex-col sm:flex-row">
-                  <div class="mt-6 min-w-36 text-lg sm:my-6">
-                    <span class="font-bold">
-                      {monthFormatter.format(
-                        new Date(2000, Number(month) - 1, 1)
-                      )}
-                    </span>
-                    <sup class="text-muted-foreground text-xs">
-                      {monthGroup.length}
-                    </sup>
+                <div class="archive-month">
+                  <div class="archive-month-label">
+                    {monthFormatter.format(
+                      new Date(2000, Number(month) - 1, 1)
+                    )}
+                    <sup>{monthGroup.length}</sup>
                   </div>
                   <ul>
                     {monthGroup
                       .sort(
                         (a, b) =>
-                          Math.floor(
-                            new Date(b.data.pubDatetime).getTime() / 1000
-                          ) -
-                          Math.floor(
-                            new Date(a.data.pubDatetime).getTime() / 1000
-                          )
+                          new Date(b.data.pubDatetime).getTime() -
+                          new Date(a.data.pubDatetime).getTime()
                       )
                       .map(data => (
                         <Card {...data} />
@@ -76,8 +97,153 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
                   </ul>
                 </div>
               ))}
-          </div>
+          </section>
         ))
-    }
+      }
+    </div>
   </Main>
 </Layout>
+
+<style>
+  .archive-years {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.75rem;
+  }
+
+  .archive-year-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .archive-year-chip:hover {
+    border-color: var(--foreground);
+    color: var(--foreground);
+  }
+
+  .archive-year-chip span {
+    color: var(--muted-foreground);
+    font-size: 0.6875rem;
+  }
+
+  .archive-timeline {
+    margin-top: 2.5rem;
+  }
+
+  .archive-year + .archive-year {
+    margin-top: 3rem;
+  }
+
+  .archive-year-head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .archive-year-title {
+    color: var(--foreground);
+    font-size: 1.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .archive-year-title sup {
+    margin-left: 0.35rem;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 500;
+    vertical-align: super;
+  }
+
+  /* Editorial rule filling the leftover width next to the year. */
+  .archive-year-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--foreground);
+    opacity: 0.18;
+  }
+
+  /* The rail is the container's left border; consecutive months stack with
+     padding (not margin) so it reads as one continuous line. */
+  .archive-month {
+    display: grid;
+    gap: 0.25rem;
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--border);
+    margin-top: 1rem;
+  }
+
+  .archive-month-label {
+    position: relative;
+    color: var(--muted-foreground);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    padding-top: 0.5rem;
+  }
+
+  /* Timeline node centred on the rail (absolutely positioned children resolve
+     against the padding box, so 0 is the inner edge of the border). */
+  .archive-month-label::before {
+    content: "";
+    position: absolute;
+    top: 1.25rem;
+    left: 0;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--border);
+    transform: translate(-50%, -50%);
+  }
+
+  .archive-month-label sup {
+    margin-left: 0.35rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    vertical-align: super;
+  }
+
+  /* Wide layout: the rail moves into the gutter between label and list. */
+  @media (min-width: 40rem) {
+    .archive-month {
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      gap: 1.5rem;
+      padding-left: 0;
+      border-left: none;
+    }
+
+    .archive-month-label {
+      padding-top: 1.25rem;
+      padding-right: 1.25rem;
+      border-right: 1px solid var(--border);
+      text-align: right;
+    }
+
+    .archive-month-label::before {
+      top: 2rem;
+      left: auto;
+      right: 0;
+      transform: translate(50%, -50%);
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .archive-year-title {
+      font-size: 2rem;
+    }
+  }
+</style>
