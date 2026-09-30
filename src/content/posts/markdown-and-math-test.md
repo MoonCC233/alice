@@ -1,7 +1,7 @@
 ---
 pubDatetime: 2026-09-16T13:40:00Z
 title: Markdown 语法与数学公式测试
-cover: "/covers/markdown-and-math-test.svg"
+cover: "/covers/markdown-and-math-test-cover.png"
 slug: markdown-and-math-test
 featured: false
 draft: false
@@ -44,6 +44,7 @@ description: 覆盖本站支持的 Markdown 语法与 KaTeX 数学公式，用�
 - 第二项，带一段补充说明。列表项里可以放多个段落，间距会自动处理。
 
   这是第二段。
+
 - 第三项
 
 有序列表：
@@ -100,6 +101,51 @@ description: 覆盖本站支持的 Markdown 语法与 KaTeX 数学公式，用�
 > [!CAUTION]
 > 可能造成损失的操作。
 
+## 折叠框
+
+用 `:::collapse[标题]` 和 `:::` 包住一段内容，就会渲染成折叠框。标题可以不写（默认「展开」），也可以加 `{open}` 让它默认展开。
+
+:::collapse[折叠框是怎么实现的]
+折叠框基于原生 `<details>` / `<summary>`，因此不依赖 JavaScript：键盘可以操作，禁用脚本也能正常展开收起，并且可以层层嵌套。
+:::
+
+:::collapse[默认展开的折叠框]{open}
+标记上加了 `{open}`，所以打开页面时它就是展开的。
+:::
+
+折叠框里可以放完整的 Markdown，包括代码块、公式、列表和提示块：
+
+:::collapse[支持的内容]
+
+- 列表、表格、引用
+- 代码块与语法高亮
+- 数学公式 $E = mc^2$
+
+```ts
+const nested: string = "折叠框里的代码块";
+```
+
+> [!TIP]
+> 折叠框里也可以嵌套提示块。
+
+:::
+
+折叠框可以套折叠框，层数不限：
+
+:::collapse[外层折叠框]
+外层的内容。
+
+:::collapse[内层折叠框]
+内层的内容，还能再套一层。
+
+:::collapse[最内层]
+最深一层，背景会逐层加深，用来区分层级。
+:::
+:::
+
+回到外层，继续写后面的内容。
+:::
+
 ## 表格
 
 | 语言       | 类型系统 | 首次发布 |
@@ -110,10 +156,10 @@ description: 覆盖本站支持的 Markdown 语法与 KaTeX 数学公式，用�
 
 对齐方式：
 
-| 左对齐     | 居中       | 右对齐     |
-| :--------- | :--------: | ---------: |
-| left       | center     | right      |
-| 短         | 中等长度   | 1234       |
+| 左对齐 |   居中   | 右对齐 |
+| :----- | :------: | -----: |
+| left   |  center  |  right |
+| 短     | 中等长度 |   1234 |
 
 ## 代码
 
@@ -145,7 +191,15 @@ $ pnpm preview
 较长的行会横向滚动，不会撑破文章栏：
 
 ```js
-const config = { perPage: 6, perIndex: 4, scheduledPostMargin: 15 * 60 * 1000, search: "pagefind", showArchives: true, showBackButton: true, lightAndDarkMode: true };
+const config = {
+  perPage: 6,
+  perIndex: 4,
+  scheduledPostMargin: 15 * 60 * 1000,
+  search: "pagefind",
+  showArchives: true,
+  showBackButton: true,
+  lightAndDarkMode: true,
+};
 ```
 
 ## 图片

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="CSP 刷题记录">
+  <defs>
+    <linearGradient id="bg-csp" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c1c1f"/>
+      <stop offset="1" stop-color="#2b2b30"/>
+    </linearGradient>
+    <pattern id="grid-csp" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0v40" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+    <style>
+      .cjk { font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif; }
+      .mono { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="750" fill="url(#bg-csp)"/>
+  <rect width="1200" height="750" fill="url(#grid-csp)"/>
+
+  <g stroke="#ffffff" stroke-opacity="0.28" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <!-- editor window -->
+    <rect x="450" y="230" width="300" height="270" rx="18"/>
+    <!-- title bar -->
+    <path d="M450 288h300"/>
+    <!-- window dots -->
+    <circle cx="482" cy="259" r="7"/>
+    <circle cx="510" cy="259" r="7"/>
+    <circle cx="538" cy="259" r="7"/>
+    <!-- accepted mark -->
+    <path d="M528 386l34 38 70-82"/>
+  </g>
+
+  <text x="600" y="562" class="mono" text-anchor="middle" fill="#ffffff" fill-opacity="0.35" font-size="22" letter-spacing="4">
+    Accepted
+  </text>
+
+  <g stroke="#ffffff" stroke-opacity="0.14" stroke-width="2" fill="none">
+    <path d="M120 640h960"/>
+  </g>
+  <text x="120" y="700" class="cjk" fill="#ffffff" font-size="48" font-weight="600">
+    CSP 刷题记录
+  </text>
+  <text x="120" y="736" class="cjk" fill="#ffffff" fill-opacity="0.45" font-size="20" letter-spacing="6">
+    目标 &#183; 计划 &#183; 复盘
+  </text>
+</svg>

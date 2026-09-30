@@ -18,6 +18,7 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
+import remarkCollapseBox from "./src/utils/remark/collapseBox";
 import config from "./astro-paper.config";
 
 export default defineConfig({
@@ -42,6 +43,7 @@ export default defineConfig({
         remarkToc,
         [remarkCollapse, { test: "Table of contents" }],
         remarkMath,
+        remarkCollapseBox,
       ],
       rehypePlugins: [rehypeKatex, rehypeCallouts],
     }),

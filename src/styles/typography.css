@@ -123,7 +123,9 @@
       opacity: 0.9;
     }
 
-    details:not(.callout) {
+    /* TOC collapse produced by remark-collapse. Collapse boxes are excluded:
+       they are block-level and their body carries real prose. */
+    details:not(.callout):not(.collapse-box) {
       @apply text-foreground inline-block cursor-pointer select-none [&_p]:hidden [&_ul]:my-0!;
     }
 

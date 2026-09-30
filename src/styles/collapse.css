@@ -1,0 +1,184 @@
+/* ===== Collapsible box (:::collapse) =====
+   Built on native <details>/<summary>: nesting, keyboard access and the
+   no-JS fallback all come from the element itself. The open/close height
+   animation rides ::details-content, so it only plays where the browser
+   supports it and snaps elsewhere (same trade-off as .about-tech-group). */
+
+.collapse-box {
+  position: relative;
+  display: block;
+  margin-block: 1.4rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 74%, transparent),
+    color-mix(in srgb, var(--surface) 32%, transparent)
+  );
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.045);
+  interpolate-size: allow-keywords;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.collapse-box:hover {
+  border-color: color-mix(in srgb, var(--foreground) 22%, var(--border));
+}
+
+.collapse-box[open] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.045),
+    0 18px 40px rgb(var(--shadow-color) / 0.07);
+}
+
+.collapse-box::details-content {
+  block-size: 0;
+  overflow: clip;
+  opacity: 0;
+  transition:
+    block-size 380ms var(--ease-out-expo),
+    opacity 200ms ease,
+    content-visibility 380ms allow-discrete;
+}
+
+.collapse-box[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+.collapse-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem 0.85rem 1.15rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background-color 200ms ease;
+}
+
+.collapse-head::-webkit-details-marker {
+  display: none;
+}
+
+.collapse-head::marker {
+  content: "";
+}
+
+/* Left rail that fills in once the box is open. */
+.collapse-head::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 0;
+  border-radius: 0 2px 2px 0;
+  background: var(--foreground);
+  content: "";
+  transform: translateY(-50%);
+  transition: height 340ms var(--ease-out-expo);
+}
+
+.collapse-box[open] > .collapse-head::before {
+  height: 62%;
+}
+
+.collapse-head:hover {
+  background: color-mix(in srgb, var(--muted) 34%, transparent);
+}
+
+/* The box clips its children, so the summary's own outline would be cut off at
+   the edges. Pull it inside and ring the whole box instead. */
+.collapse-head:focus-visible {
+  outline-offset: -2px;
+}
+
+.collapse-box:has(> .collapse-head:focus-visible) {
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.collapse-icon {
+  display: grid;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--surface-strong) 68%, transparent);
+  color: var(--muted-foreground);
+  transition:
+    color 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease;
+}
+
+.collapse-icon::before {
+  width: 0.33rem;
+  height: 0.33rem;
+  margin-top: -0.09rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  content: "";
+  transform: rotate(45deg);
+  transition:
+    transform 340ms var(--ease-out-expo),
+    margin-top 340ms var(--ease-out-expo);
+}
+
+.collapse-box[open] > .collapse-head .collapse-icon::before {
+  margin-top: 0.09rem;
+  transform: rotate(-135deg);
+}
+
+.collapse-head:hover .collapse-icon {
+  border-color: color-mix(in srgb, var(--foreground) 32%, var(--border));
+  color: var(--foreground);
+}
+
+.collapse-title {
+  min-width: 0;
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.collapse-body {
+  padding: 0 1.15rem 1.05rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+}
+
+.collapse-body > :first-child {
+  margin-block-start: 1rem;
+}
+
+.collapse-body > :last-child {
+  margin-block-end: 0;
+}
+
+/* Nesting steps the surface back so depth stays readable. */
+.collapse-body .collapse-box {
+  margin-block: 0.9rem;
+  background: color-mix(in srgb, var(--surface-strong) 46%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapse-box,
+  .collapse-head,
+  .collapse-head::before,
+  .collapse-icon,
+  .collapse-icon::before {
+    transition: none;
+  }
+
+  .collapse-box::details-content {
+    transition: none;
+  }
+}
