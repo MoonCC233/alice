@@ -1,7 +1,7 @@
 ---
 pubDatetime: 2026-09-30T14:00:00+08:00
 title: CSP 刷题记录
-cover: "/covers/csp-practice-log.svg"
+cover: "/covers/CSP刷题记录.png"
 slug: csp-practice-log
 featured: false
 draft: false

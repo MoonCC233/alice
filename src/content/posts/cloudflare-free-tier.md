@@ -1,7 +1,7 @@
 ---
 pubDatetime: 2026-09-19T14:20:00Z
 title: Cloudflare 免费套餐全景
-cover: "/covers/cloudflare-free-tier.svg"
+cover: "/covers/Cloudflare免费套餐全景.png"
 slug: cloudflare-free-tier
 featured: false
 draft: false
@@ -48,7 +48,6 @@ description: 从注册、域名解析到用 Tunnel 把内网服务暴露到公�
 另外代理只覆盖一组固定的 HTTP/HTTPS 端口（80、443、8080、8443 这些）, 服务跑在非标准端口上, 流量就会绕过 Cloudflare 直接打到源站。
 
 ## CloudFlare Tunnel
-
 
 买了域名和某云服务器的小伙伴们, 最难受的应该就是**域名备案**问题了, 国内云厂商对 80 和 443 这两个端口管得最严：域名没有备案号, 解析过去会在厂商那一层就被拦下, 你连自己的服务都摸不到. 如果没有进行域名和服务器的备案, 直接访问域名将会跳转到厂商服务器的提示页面, 无法进行合法访问, 包括我们常见的**内网穿透**工具, 能够穿透的端口也小的可怜, 还要付费解锁更多端口, 这里不点名某 `frp` 软件
 

@@ -1,7 +1,7 @@
 ---
 pubDatetime: 2026-09-16T13:40:00Z
 title: Markdown 语法与数学公式测试
-cover: "/covers/markdown-and-math-test-cover.png"
+cover: "/covers/Markdown语法与数学公式测试.png"
 slug: markdown-and-math-test
 featured: false
 draft: false
