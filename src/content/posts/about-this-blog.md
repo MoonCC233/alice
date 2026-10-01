@@ -1,7 +1,7 @@
 ---
 pubDatetime: 2026-09-19T10:00:00Z
 title: 关于这个博客
-cover: "/covers/about-this-blog.svg"
+cover: "/covers/关于.png"
 slug: about-this-blog
 featured: false
 draft: false

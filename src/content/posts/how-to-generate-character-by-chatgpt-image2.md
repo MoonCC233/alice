@@ -1,6 +1,6 @@
 ---
 pubDatetime: 2026-09-30T13:40:00+08:00
-title: 我是如何用chatgpt2生成人物图像的
+title: 我是如何用chatgpt image2生成人物图像的
 featured: false
 draft: false
 tags:
@@ -12,7 +12,7 @@ description: 如何使用 ChatGPT Image 2 更好地生成同人图像和相关�
 
 ChatGPT 画人物有个毛病：同一段描述分几次生成，出来的是不同的人。脸、发型、衣服全靠运气。
 
-我的做法是先把角色形象**定死**，再拿它去生成具体场景。
+我的做法是先把角色形象定死，再拿它去生成具体场景。
 
 ## 一、三视图 + 立绘
 
