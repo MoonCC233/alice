@@ -53,6 +53,22 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
   id="hero"
   class="border-border relative grid gap-10 border-y py-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-8 lg:gap-14 lg:py-16"
 >
+  <!--
+    Entrance animations play once per session. On a real page load this hides
+    them before the animated elements below are parsed (so nothing flashes);
+    the View-Transition path re-stamps the incoming document in before-swap
+    (see the script at the end of this file).
+  -->
+  <script is:inline>
+    try {
+      if (sessionStorage.getItem("hero-anim-seen") === "1") {
+        document.documentElement.setAttribute("data-hero-seen", "");
+      }
+    } catch (e) {
+      // Storage blocked: the intro simply replays.
+    }
+  </script>
+
   <!-- Left: avatar, intro, meta; vertically centered on desktop to balance
        the taller heatmap card on the right -->
   <div class="flex min-w-0 flex-col md:justify-center">
@@ -231,6 +247,15 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
     }
   }
 
+  /* Entrance animations play once per session. ClientRouter recreates this DOM
+     on every navigation, which would otherwise replay them; `data-hero-seen`
+     is stamped by the inline guard above and the before-swap handler below. */
+  :global(html[data-hero-seen]) .animate-fade-up,
+  :global(html[data-hero-seen]) .heat-cell,
+  :global(html[data-hero-seen]) .card-in {
+    animation: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .heat-cell,
     .card-in {
@@ -332,4 +357,36 @@ const runningDays = hero.since ? daysSince(hero.since, site.timezone) : null;
 
   setupHeatmapTip();
   document.addEventListener("astro:after-swap", setupHeatmapTip);
+
+  // Entrance animations (avatar/description/meta, heatmap cells, right card)
+  // play once per session rather than replaying on every View Transition. The
+  // first animation to finish marks the session; after that, every incoming
+  // document is stamped before the swap so a later visit to this page is
+  // suppressed before it paints. Mirrors the theme-color carry-over in
+  // scripts/theme.ts — the marker cannot live on the current <html>, which
+  // ClientRouter replaces on each swap.
+  const HERO_ANIM_SEEN = "hero-anim-seen";
+  const markHeroSeen = () => {
+    try {
+      sessionStorage.setItem(HERO_ANIM_SEEN, "1");
+    } catch {
+      // Storage blocked: the intro simply replays on the next visit.
+    }
+  };
+  document
+    .getElementById("hero")
+    ?.addEventListener("animationend", markHeroSeen, { once: true });
+
+  document.addEventListener("astro:before-swap", event => {
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem(HERO_ANIM_SEEN) === "1";
+    } catch {
+      // Storage blocked: leave the incoming document untouched.
+    }
+    if (!seen) return;
+    (
+      event as { newDocument?: Document }
+    ).newDocument?.documentElement.setAttribute("data-hero-seen", "");
+  });
 </script>

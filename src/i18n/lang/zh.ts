@@ -10,6 +10,7 @@ export default {
     archives: "归档",
     search: "搜索",
     links: "友链",
+    moments: "动态",
     menu: "菜单",
     theme: "主题",
   },
@@ -97,6 +98,18 @@ export default {
     yearJump: "年份导航",
     postUnit: "篇",
   },
+  moments: {
+    loading: "正在加载动态…",
+    empty: "还没有动态。",
+    error: "动态加载失败，请稍后再试。",
+    retry: "重试",
+    loadMore: "加载更多",
+    loadingMore: "加载中…",
+    edited: "已编辑",
+    end: "已经到底啦",
+    notConfigured: "尚未配置动态服务地址。",
+    aria: "动态列表",
+  },
   footer: {
     copyright: "版权所有",
     allRightsReserved: "保留所有权利。",
@@ -128,6 +141,9 @@ export default {
     linksDesc: "我的朋友们，排名不分先后。",
     linksApply: "想交换友链？欢迎通过",
     linksApplyTail: "页与我联系。",
+
+    momentsTitle: "动态",
+    momentsDesc: "记录生活的碎片，想到什么就写什么。",
   },
   a11y: {
     skipToContent: "跳转到内容",

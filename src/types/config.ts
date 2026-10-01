@@ -126,6 +126,17 @@ interface DonationConfig {
   items?: DonationItem[];
 }
 
+interface MomentsConfig {
+  /**
+   * Base URL of the moments (动态) API, e.g. "https://moment.teanli.top".
+   * Leave empty to hide the nav entry and show an "unconfigured" notice on
+   * the page. The public list is read from `${apiBase}/api/moments`.
+   */
+  apiBase?: string;
+  /** Moments fetched per page. Defaults to 20; the API caps this at 50. */
+  limit?: number;
+}
+
 interface AstroPaperConfig {
   site: SiteConfig;
   posts?: PostsConfig;
@@ -134,6 +145,8 @@ interface AstroPaperConfig {
   hero?: HeroConfig;
   /** Donation methods shown on the about page. */
   donation?: DonationConfig;
+  /** Moments (动态) feed backed by an external HTTP API */
+  moments?: MomentsConfig;
   /** Social profile links shown in header/footer */
   socials?: SocialLink[];
 }
@@ -160,6 +173,10 @@ export interface ResolvedAstroPaperConfig {
   donation: {
     enabled: boolean;
     items: DonationItem[];
+  };
+  moments: {
+    apiBase: string;
+    limit: number;
   };
   socials: SocialLink[];
 }

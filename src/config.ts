@@ -53,6 +53,10 @@ const config: ResolvedAstroPaperConfig = {
       },
     ],
   },
+  moments: {
+    apiBase: userConfig.moments?.apiBase ?? "",
+    limit: userConfig.moments?.limit ?? 20,
+  },
 };
 
 export default config;

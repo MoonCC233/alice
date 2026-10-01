@@ -10,6 +10,7 @@ export default {
     archives: "Archives",
     search: "Search",
     links: "Links",
+    moments: "Moments",
     menu: "Menu",
     theme: "Theme",
   },
@@ -99,6 +100,18 @@ export default {
     yearJump: "Year navigation",
     postUnit: "posts",
   },
+  moments: {
+    loading: "Loading moments…",
+    empty: "No moments yet.",
+    error: "Failed to load moments. Please try again later.",
+    retry: "Retry",
+    loadMore: "Load more",
+    loadingMore: "Loading…",
+    edited: "edited",
+    end: "You've reached the end",
+    notConfigured: "The moments API is not configured yet.",
+    aria: "Moments feed",
+  },
   footer: {
     copyright: "Copyright",
     allRightsReserved: "All rights reserved.",
@@ -130,6 +143,9 @@ export default {
     linksDesc: "My friends, in no particular order.",
     linksApply: "Want to exchange links? Reach me via the",
     linksApplyTail: "page.",
+
+    momentsTitle: "Moments",
+    momentsDesc: "Little fragments of life, written down as they come.",
   },
   a11y: {
     skipToContent: "Skip to content",

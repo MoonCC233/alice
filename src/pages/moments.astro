@@ -1,0 +1,456 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Main from "@/components/Main.astro";
+import { useTranslations } from "@/i18n";
+import config from "@/config";
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+
+const { apiBase, limit } = config.moments;
+const isConfigured = apiBase.trim().length > 0;
+---
+
+<Layout
+  title={`${t.pages.momentsTitle} | ${config.site.title}`}
+  description={t.pages.momentsDesc}
+  breadcrumb
+>
+  <Main pageTitle={t.pages.momentsTitle} pageDesc={t.pages.momentsDesc}>
+    <!--
+      Client-rendered feed. The blog is fully static, so the public API is
+      fetched at runtime from the browser (the endpoint sends
+      `Access-Control-Allow-Origin: *`). Everything the script needs is passed
+      through data-* attributes, which keeps the API base configurable without
+      touching this file.
+    -->
+    <div
+      id="moments-root"
+      data-api-base={apiBase}
+      data-limit={limit}
+      data-tz={config.site.timezone}
+      data-locale={locale}
+      data-label-loading={t.moments.loading}
+      data-label-empty={t.moments.empty}
+      data-label-error={t.moments.error}
+      data-label-retry={t.moments.retry}
+      data-label-load-more={t.moments.loadMore}
+      data-label-loading-more={t.moments.loadingMore}
+      data-label-edited={t.moments.edited}
+      data-label-end={t.moments.end}
+      data-label-not-configured={t.moments.notConfigured}
+    >
+      <ul id="moments-list" class="moments-list" aria-label={t.moments.aria}>
+      </ul>
+
+      <p id="moments-status" role="status" class="moments-status">
+        {isConfigured ? t.moments.loading : t.moments.notConfigured}
+      </p>
+
+      <div id="moments-more-wrap" class="moments-more-wrap" hidden>
+        <button id="moments-more" type="button" class="moments-more">
+          {t.moments.loadMore}
+        </button>
+      </div>
+    </div>
+  </Main>
+</Layout>
+
+<!--
+  Global, not scoped: every feed element is created by the client script at
+  runtime, so it never carries Astro's scoping attribute. Namespaced under
+  #moments-root, which only this page renders.
+-->
+<style is:global>
+  #moments-root .moments-list {
+    position: relative;
+    display: grid;
+    gap: 0.875rem;
+  }
+
+  /* Timeline rail running through the gutter. */
+  #moments-root .moments-list::before {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    inset-inline-start: 5px;
+    width: 1.5px;
+    background: color-mix(in srgb, var(--foreground) 20%, transparent);
+  }
+
+  #moments-root .moment-item {
+    position: relative;
+    padding-inline-start: 1.75rem;
+  }
+
+  /* Node on the rail, centred without a transform so RTL needs no override. */
+  #moments-root .moment-item::before {
+    content: "";
+    position: absolute;
+    top: 1.4rem;
+    inset-inline-start: 5px;
+    margin-inline-start: -3.25px;
+    width: 6.5px;
+    height: 6.5px;
+    border-radius: 999px;
+    background: var(--foreground);
+    opacity: 0.35;
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  #moments-root .moment-item:hover::before {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+
+  #moments-root .moment-card {
+    border-radius: 0.75rem;
+    padding: 1rem 1.15rem 1.15rem;
+    transition:
+      border-color 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  #moments-root .moment-item:hover .moment-card {
+    border-color: color-mix(in srgb, var(--foreground) 30%, var(--border));
+  }
+
+  #moments-root .moment-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+  }
+
+  #moments-root .moment-time {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #moments-root .moment-edited {
+    background: var(--muted);
+    border-radius: 999px;
+    padding: 0.15rem 0.5rem;
+    color: var(--muted-foreground);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+  }
+
+  /* pre-wrap keeps the author's line breaks; overflow-wrap breaks long URLs. */
+  #moments-root .moment-body {
+    color: var(--foreground);
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  #moments-root .moment-body a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  #moments-root .moment-body strong {
+    font-weight: 600;
+  }
+
+  #moments-root .moment-body code {
+    background: var(--muted);
+    border-radius: 0.35rem;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.85em;
+  }
+
+  #moments-root .moments-status {
+    margin-block: 1.75rem;
+    text-align: center;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+
+  #moments-root .moments-status[data-kind="error"] {
+    color: var(--foreground);
+  }
+
+  #moments-root .moments-more-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.75rem;
+  }
+
+  /* The UA's [hidden] rule is weaker than `display: flex`, so restate it. */
+  #moments-root .moments-more-wrap[hidden] {
+    display: none;
+  }
+
+  #moments-root .moments-more {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.5rem 1.25rem;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  #moments-root .moments-more:hover:not(:disabled) {
+    border-color: var(--foreground);
+    color: var(--foreground);
+  }
+
+  #moments-root .moments-more:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+</style>
+
+<script>
+  type Moment = {
+    id: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+
+  function escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // Only schemes we are willing to put in href — blocks javascript: etc.
+  const SAFE_URL = /^(?:https?:\/\/|mailto:|\/(?!\/)|#)/i;
+
+  // Markdown subset supported by the API: `code`, **bold**, *italic*,
+  // [label](url), bare links. The input is already HTML-escaped, so the only
+  // markup in the output is what we generate here — no XSS surface. The link
+  // URL allows one level of balanced parens so URLs like /wiki/Foo_(bar) work.
+  const INLINE =
+    /(`([^`\n]+)`)|(\*\*([^*\n]+)\*\*)|(\*([^*\n]+)\*)|(\[([^\]\n]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\))|((?:https?:\/\/|www\.)[^\s<]+)/g;
+
+  // Trailing sentence punctuation that a greedy URL match swallows.
+  const TRAILING = /[.,;:!?，。、；：！）)】」》]+$/;
+
+  function renderInline(escaped: string): string {
+    return escaped.replace(
+      INLINE,
+      (
+        match,
+        _c1: string,
+        code: string,
+        _b1: string,
+        bold: string,
+        _i1: string,
+        italic: string,
+        _l1: string,
+        label: string,
+        url: string,
+        bare: string
+      ) => {
+        if (code !== undefined) return `<code>${code}</code>`;
+        if (bold !== undefined) return `<strong>${bold}</strong>`;
+        if (italic !== undefined) return `<em>${italic}</em>`;
+
+        if (label !== undefined && url !== undefined) {
+          return SAFE_URL.test(url)
+            ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`
+            : label;
+        }
+
+        if (bare !== undefined) {
+          let href = bare;
+          let tail = "";
+          const trailing = bare.match(TRAILING);
+          if (trailing) {
+            tail = trailing[0];
+            href = bare.slice(0, -tail.length);
+          }
+          const absolute = href.startsWith("www.") ? `https://${href}` : href;
+          if (!SAFE_URL.test(absolute)) return match;
+          return `<a href="${absolute}" target="_blank" rel="noopener noreferrer">${href}</a>${tail}`;
+        }
+
+        return match;
+      }
+    );
+  }
+
+  function initMoments() {
+    const root = document.getElementById("moments-root") as HTMLElement | null;
+    if (!root || root.dataset.bound === "true") return;
+    root.dataset.bound = "true";
+
+    const apiBase = (root.dataset.apiBase ?? "").replace(/\/+$/, "");
+    const limit = Number(root.dataset.limit) || 20;
+    const timezone = root.dataset.tz || "UTC";
+    const locale = root.dataset.locale || "en";
+
+    const labels = {
+      loading: root.dataset.labelLoading ?? "",
+      empty: root.dataset.labelEmpty ?? "",
+      error: root.dataset.labelError ?? "",
+      retry: root.dataset.labelRetry ?? "",
+      loadMore: root.dataset.labelLoadMore ?? "",
+      loadingMore: root.dataset.labelLoadingMore ?? "",
+      edited: root.dataset.labelEdited ?? "",
+      end: root.dataset.labelEnd ?? "",
+      notConfigured: root.dataset.labelNotConfigured ?? "",
+    };
+
+    const list = document.getElementById("moments-list");
+    const status = document.getElementById("moments-status");
+    const moreWrap = document.getElementById("moments-more-wrap");
+    const moreBtn = document.getElementById(
+      "moments-more"
+    ) as HTMLButtonElement | null;
+    if (!list || !status || !moreWrap || !moreBtn) return;
+
+    const setStatus = (text: string, kind: string) => {
+      status.textContent = text;
+      status.hidden = text === "";
+      if (kind) status.dataset.kind = kind;
+      else delete status.dataset.kind;
+    };
+
+    if (!apiBase) {
+      setStatus(labels.notConfigured, "error");
+      return;
+    }
+
+    let cursor: string | null = null;
+    let loading = false;
+
+    const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    const absoluteDate = new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: timezone,
+    });
+
+    // Ordered coarsest → finest; the first unit at or above the delta wins.
+    const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+      ["year", 31536000],
+      ["month", 2592000],
+      ["day", 86400],
+      ["hour", 3600],
+      ["minute", 60],
+      ["second", 1],
+    ];
+
+    const relativeTime = (iso: string): string => {
+      const then = new Date(iso).getTime();
+      if (Number.isNaN(then)) return "";
+      const diff = (then - Date.now()) / 1000;
+      const magnitude = Math.abs(diff);
+      for (const [unit, seconds] of UNITS) {
+        if (magnitude >= seconds || unit === "second") {
+          return relative.format(Math.round(diff / seconds), unit);
+        }
+      }
+      return "";
+    };
+
+    // Intl.DateTimeFormat throws on an Invalid Date, so a malformed timestamp
+    // degrades to an empty tooltip rather than blanking the whole feed.
+    const absoluteTime = (iso: string): string => {
+      const date = new Date(iso);
+      return Number.isNaN(date.getTime()) ? "" : absoluteDate.format(date);
+    };
+
+    const renderItem = (moment: Moment): HTMLLIElement => {
+      const item = document.createElement("li");
+      item.className = "moment-item";
+
+      const card = document.createElement("article");
+      card.className = "moment-card surface-panel";
+
+      const meta = document.createElement("header");
+      meta.className = "moment-meta";
+
+      const time = document.createElement("time");
+      time.className = "moment-time";
+      time.dateTime = moment.createdAt;
+      time.title = absoluteTime(moment.createdAt);
+      time.textContent = relativeTime(moment.createdAt);
+      meta.appendChild(time);
+
+      // updatedAt differing from createdAt is the API's "has been edited" flag.
+      if (moment.updatedAt && moment.updatedAt !== moment.createdAt) {
+        const edited = document.createElement("span");
+        edited.className = "moment-edited";
+        edited.textContent = labels.edited;
+        edited.title = absoluteTime(moment.updatedAt);
+        meta.appendChild(edited);
+      }
+
+      const body = document.createElement("div");
+      body.className = "moment-body";
+      body.innerHTML = renderInline(escapeHtml(moment.content));
+
+      card.append(meta, body);
+      item.appendChild(card);
+      return item;
+    };
+
+    const load = async () => {
+      if (loading) return;
+      loading = true;
+      moreBtn.disabled = true;
+      moreBtn.textContent = labels.loadingMore;
+      if (list.children.length === 0) setStatus(labels.loading, "loading");
+
+      try {
+        const url = new URL(`${apiBase}/api/moments`);
+        url.searchParams.set("limit", String(limit));
+        if (cursor) url.searchParams.set("cursor", cursor);
+
+        const res = await fetch(url, {
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = (await res.json()) as {
+          items?: Moment[];
+          nextCursor?: string | null;
+        };
+        const items = Array.isArray(data.items) ? data.items : [];
+        for (const moment of items) list.appendChild(renderItem(moment));
+        cursor = data.nextCursor ?? null;
+
+        if (list.children.length === 0) {
+          setStatus(labels.empty, "empty");
+        } else if (cursor) {
+          setStatus("", "");
+        } else {
+          setStatus(labels.end, "");
+        }
+
+        moreBtn.textContent = labels.loadMore;
+        moreWrap.hidden = !cursor;
+      } catch {
+        setStatus(labels.error, "error");
+        // Keep the button as a retry when a request fails mid-feed.
+        moreBtn.textContent = labels.retry;
+        moreWrap.hidden = false;
+      } finally {
+        loading = false;
+        moreBtn.disabled = false;
+      }
+    };
+
+    moreBtn.addEventListener("click", load);
+    void load();
+  }
+
+  initMoments();
+  document.addEventListener("astro:after-swap", initMoments);
+</script>

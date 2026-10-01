@@ -9,6 +9,7 @@ import IconFileText from "@/assets/icons/IconFileText.svg";
 import IconHash from "@/assets/icons/IconHash.svg";
 import IconUser from "@/assets/icons/IconUser.svg";
 import IconLink from "@/assets/icons/IconLink.svg";
+import IconEdit from "@/assets/icons/IconEdit.svg";
 import IconX from "@/assets/icons/IconX.svg";
 import IconChevronDown from "@/assets/icons/IconChevronDown.svg";
 import Logo from "@/assets/icons/Logo.svg";
@@ -47,6 +48,10 @@ const isActive = (path: string) => {
   return currentPath === path || currentPathArray[0] === pathArray[0];
 };
 
+// Moments have no dedicated feature flag: an unconfigured API base hides the
+// entry entirely (same "no new config surface" pattern as the hero island).
+const showMoments = config.moments.apiBase.trim().length > 0;
+
 // The "content" nav entry groups posts/tags/archives behind one submenu, so it
 // counts as active when any of its children is the current page. The
 // comma-separated list is the format the client-side resolver already expects.
@@ -54,6 +59,7 @@ const groupPaths = [
   "/posts",
   "/tags",
   ...(features.showArchives ? ["/archives"] : []),
+  ...(showMoments ? ["/moments"] : []),
 ];
 const groupNavPaths = groupPaths.join(",");
 const isGroupActive = groupPaths.some(isActive);
@@ -222,6 +228,21 @@ const islandCountdownText = islandHasCountdown
                     >
                       <IconArchive class="size-4" aria-hidden="true" />
                       {t.nav.archives}
+                    </a>
+                  </li>
+                )
+              }
+              {
+                showMoments && (
+                  <li>
+                    <a
+                      href={getRelativeLocaleUrl(locale, "moments")}
+                      class="hover:bg-muted flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors"
+                      data-nav-path="/moments"
+                      aria-current={isActive("/moments") ? "page" : undefined}
+                    >
+                      <IconEdit class="size-4" aria-hidden="true" />
+                      {t.nav.moments}
                     </a>
                   </li>
                 )
@@ -500,6 +521,22 @@ const islandCountdownText = islandHasCountdown
               </li>
             )
           }
+          {
+            showMoments && (
+              <li>
+                <a
+                  href={getRelativeLocaleUrl(locale, "moments")}
+                  class:list={[
+                    "hover:text-foreground block rounded-md px-3 py-2 font-medium transition-colors",
+                    { "active-nav": isActive("/moments") },
+                  ]}
+                  data-nav-path="/moments"
+                >
+                  {t.nav.moments}
+                </a>
+              </li>
+            )
+          }
         </ul>
       </li>
       <li>
@@ -680,8 +717,11 @@ const islandCountdownText = islandHasCountdown
     animation: none;
   }
 
-  /* Mobile menu: neutral active/hover emphasis (no theme colour). */
+  /* Mobile menu: neutral active/hover emphasis (no theme colour). The muted
+     background is required — without it the `.active-nav` utility's own
+     bg-foreground pill shows through and the foreground-coloured text vanishes. */
   #menu-items .active-nav {
+    background: var(--muted);
     color: var(--foreground);
   }
 

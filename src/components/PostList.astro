@@ -55,7 +55,12 @@ const { posts, variant } = Astro.props;
     });
   }
 
-  document.addEventListener("astro:page-load", setupPostListGlow);
+  // Bind immediately (module scripts run after the DOM is parsed) and again
+  // after each View Transition swap. Relying on `astro:page-load` alone raced
+  // the router: when the listener registered too late, the initial load's
+  // event was missed and the highlight never bound until a later navigation.
+  setupPostListGlow();
+  document.addEventListener("astro:after-swap", setupPostListGlow);
 </script>
 
 <style>

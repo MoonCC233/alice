@@ -34,12 +34,18 @@ const backUrl = config.features.showBackButton
 </main>
 
 <script>
-  document.addEventListener("astro:page-load", () => {
+  // Keep the "back" target fresh. Bound immediately (module scripts run after
+  // the DOM is parsed) as well as after each View Transition: binding only on
+  // `astro:page-load` raced the router and could miss the initial load.
+  function saveBackUrl() {
     const mainContent: HTMLElement | null =
       document.querySelector("#main-content");
     const backUrl = mainContent?.dataset?.backurl;
     if (backUrl) {
       sessionStorage.setItem("backUrl", backUrl);
     }
-  });
+  }
+
+  saveBackUrl();
+  document.addEventListener("astro:after-swap", saveBackUrl);
 </script>

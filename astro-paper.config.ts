@@ -50,6 +50,12 @@ export default defineAstroPaperConfig({
       },
     ],
   },
+  // 动态服务：填上你自己的 API 地址后，「动态」入口会自动出现在导航里。
+  // 留空则隐藏入口。公开列表读取 `${apiBase}/api/moments`。
+  moments: {
+    apiBase: "https://moment.teanli.top",
+    limit: 20,
+  },
   socials: [
     // 微信没有「按 ID 加好友」的跳转协议，这个图标点击时复制微信号
     {

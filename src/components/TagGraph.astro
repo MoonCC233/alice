@@ -118,7 +118,12 @@ const views = [
 
     {
       nodes.length > 0 && (
-        <div id="tag-settings-panel" class="tag-settings" data-tag-settings hidden>
+        <div
+          id="tag-settings-panel"
+          class="tag-settings"
+          data-tag-settings
+          hidden
+        >
           <p class="tag-settings-title">{s.title}</p>
           <div class="tag-settings-body">
             <fieldset class="tag-settings-group">
@@ -342,7 +347,11 @@ const views = [
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     padding: 1rem;
-    background-color: color-mix(in srgb, var(--surface-strong) 55%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--surface-strong) 55%,
+      transparent
+    );
     animation: tag-settings-reveal 0.3s var(--ease-out-expo);
   }
 
@@ -669,5 +678,5 @@ const views = [
   import { initTagGraphs } from "@/scripts/tagGraph";
 
   initTagGraphs();
-  document.addEventListener("astro:page-load", initTagGraphs);
+  document.addEventListener("astro:after-swap", initTagGraphs);
 </script>

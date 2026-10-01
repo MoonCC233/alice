@@ -8,6 +8,7 @@ export interface UIStrings {
     archives: string;
     search: string;
     links: string;
+    moments: string;
     menu: string;
     theme: string;
   };
@@ -94,6 +95,18 @@ export interface UIStrings {
     yearJump: string;
     postUnit: string;
   };
+  moments: {
+    loading: string;
+    empty: string;
+    error: string;
+    retry: string;
+    loadMore: string;
+    loadingMore: string;
+    edited: string;
+    end: string;
+    notConfigured: string;
+    aria: string;
+  };
   footer: {
     copyright: string;
     allRightsReserved: string;
@@ -125,6 +138,9 @@ export interface UIStrings {
     linksDesc: string;
     linksApply: string;
     linksApplyTail: string;
+
+    momentsTitle: string;
+    momentsDesc: string;
   };
   a11y: {
     skipToContent: string;

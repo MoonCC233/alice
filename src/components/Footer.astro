@@ -182,7 +182,7 @@ const initialDatetime = datetimeFormatter.format(now);
 
   startClock();
   // 页面切换后重新绑定（ClientRouter 会替换 DOM，元素引用会失效）
-  document.addEventListener("astro:page-load", startClock);
+  document.addEventListener("astro:after-swap", startClock);
 </script>
 
 <style>
