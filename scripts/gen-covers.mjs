@@ -62,8 +62,8 @@ const run = async () => {
       if (width >= metadata.width) continue;
 
       for (const [format, options] of [
-        ["webp", { quality: 82 }],
-        ["avif", { quality: 65 }],
+        ["webp", { quality: 80, effort: 6 }],
+        ["avif", { quality: 58, effort: 6 }],
       ]) {
         const info = await sharp(filePath)
           .resize({ width, withoutEnlargement: true })

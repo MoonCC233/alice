@@ -8,7 +8,7 @@
   "scripts": {
     "covers": "node scripts/gen-covers.mjs",
     "dev": "node scripts/gen-covers.mjs && astro dev",
-    "build": "node scripts/gen-covers.mjs && astro check && astro build && pagefind --site dist && cp -r dist/pagefind public/",
+    "build": "node scripts/gen-covers.mjs && astro check && astro build && node scripts/inline-css.mjs && pagefind --site dist && cp -r dist/pagefind public/",
     "preview": "astro preview",
     "sync": "astro sync",
     "astro": "astro",
