@@ -23,6 +23,10 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
+# generated cover variants (scripts/gen-covers.mjs)
+public/covers/*-[0-9]*w.webp
+public/covers/*-[0-9]*w.avif
+
 # pagefind
 public/pagefind
 

@@ -31,7 +31,7 @@ export default defineAstroPaperConfig({
     enabled: true,
     role: "[游戏开发者 / 全栈开发者]",
     avatar:
-      "https://q.qlogo.cn/headimg_dl?dst_uin=1721299119&spec=640&img_type=jpg",
+      "https://q.qlogo.cn/headimg_dl?dst_uin=1721299119&spec=160&img_type=jpg",
     since: "2026-09-10",
     event: { name: "中秋节", date: "2026-09-25" },
   },

@@ -5,9 +5,15 @@ import Card from "./Card.astro";
 type Props = {
   posts: CollectionEntry<"posts">[];
   variant?: "h2" | "h3";
+  /** How many leading cards render their covers eagerly (above the fold). */
+  eagerCount?: number;
 };
 
-const { posts, variant } = Astro.props;
+const { posts, variant, eagerCount = 3 } = Astro.props;
+
+// The first card with a cover is the likely LCP on every
+// list page, so it gets fetchpriority=high.
+const firstCoverIndex = posts.findIndex(post => post.data.cover);
 ---
 
 <ul id="post-list" class="relative">
@@ -19,7 +25,16 @@ const { posts, variant } = Astro.props;
     class="post-list-glow pointer-events-none absolute -inset-x-4 top-0 z-0 rounded-md opacity-0 transition-[opacity,transform,height] duration-300 ease-out"
   >
   </div>
-  {posts.map(data => <Card variant={variant} {...data} />)}
+  {
+    posts.map((data, index) => (
+      <Card
+        variant={variant}
+        eager={index < eagerCount}
+        priority={index === firstCoverIndex}
+        {...data}
+      />
+    ))
+  }
 </ul>
 
 <script>

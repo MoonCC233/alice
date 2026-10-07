@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { getCoverUrl } from "@/utils/getCoverUrl";
+import { COVER_THUMB_WIDTHS, getCoverImageSet } from "@/utils/getCoverImageSet";
 import { getPostUrl } from "@/utils/getPostPaths";
 import {
   toTransitionName,
@@ -10,12 +10,23 @@ import Datetime from "./Datetime.astro";
 
 type Props = {
   variant?: "h2" | "h3";
+  /** Render the cover without lazy-loading (above-the-fold cards). */
+  eager?: boolean;
+  /** Mark the cover as the likely LCP (fetchpriority=high). */
+  priority?: boolean;
 } & CollectionEntry<"posts">;
 
-const { variant: Heading = "h2", id, data, filePath } = Astro.props;
+const {
+  variant: Heading = "h2",
+  id,
+  data,
+  filePath,
+  eager,
+  priority,
+} = Astro.props;
 
 const { title, description, cover, ...props } = data;
-const coverUrl = getCoverUrl(cover);
+const coverSet = getCoverImageSet(cover, COVER_THUMB_WIDTHS);
 ---
 
 <!-- The flex row is an inner div, never the <li>: `display: flex` on an <li>
@@ -25,7 +36,7 @@ const coverUrl = getCoverUrl(cover);
 >
   <div class="flex items-start gap-5">
     {
-      coverUrl && (
+      coverSet && (
         <span
           style={{ viewTransitionName: toCoverTransitionName(id) }}
           class="bg-muted border-border block aspect-[16/10] w-28 flex-none overflow-hidden rounded-md border sm:w-40"
@@ -34,14 +45,25 @@ const coverUrl = getCoverUrl(cover);
               wait for images before snapshotting, so a named <img> can capture
               empty — the wrapper's bg-muted degrades gracefully. It also bakes
               in the crop and radius. */}
-          <img
-            src={coverUrl}
-            alt=""
-            width="640"
-            height="400"
-            loading="lazy"
-            class="size-full object-cover transition duration-500 group-hover:scale-[1.04]"
-          />
+          <picture>
+            {/* sizes matches the wrapper: w-28 (112px), sm:w-40 (160px) */}
+            {coverSet.sources.map(source => (
+              <source
+                type={source.type}
+                srcset={source.srcset}
+                sizes="(min-width: 640px) 160px, 112px"
+              />
+            ))}
+            <img
+              src={coverSet.src}
+              alt=""
+              width={coverSet.width}
+              height={coverSet.height}
+              loading={eager ? "eager" : "lazy"}
+              fetchpriority={priority ? "high" : undefined}
+              class="size-full object-cover transition duration-500 group-hover:scale-[1.04]"
+            />
+          </picture>
         </span>
       )
     }

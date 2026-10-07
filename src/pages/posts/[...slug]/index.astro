@@ -5,7 +5,7 @@ import Datetime from "@/components/Datetime.astro";
 import Tag from "@/components/Tag.astro";
 import { getPostSlug } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
-import { getCoverUrl } from "@/utils/getCoverUrl";
+import { COVER_HERO_WIDTHS, getCoverImageSet } from "@/utils/getCoverImageSet";
 import { slugifyStr } from "@/utils/slugify";
 import {
   toTransitionName,
@@ -94,7 +94,7 @@ const {
   cover,
 } = post.data;
 
-const coverUrl = getCoverUrl(cover);
+const coverSet = getCoverImageSet(cover, COVER_HERO_WIDTHS);
 
 const { Content, headings } = await render(post);
 
@@ -228,25 +228,35 @@ const wordCount = countWords(post.body);
     <!-- Cover hero. Deliberately outside #article: initLightbox only binds
          images inside #article, so this is not a click-to-zoom target. -->
     {
-      coverUrl && (
+      coverSet && (
         <div
           style={{ viewTransitionName: toCoverTransitionName(post.id) }}
           class="post-reading-cover"
         >
-          {/* decoding=sync + fetchpriority=high: Astro does not wait for images
-              before snapshotting the new page, and the list card already fetched
-              this exact URL, so a synchronous cache-hot decode is what makes the
-              morph snapshot contain pixels instead of an empty box. */}
-          <img
-            src={coverUrl}
-            alt=""
-            width="640"
-            height="400"
-            loading="eager"
-            decoding="sync"
-            fetchpriority="high"
-            class="size-full object-cover transition duration-700 hover:scale-[1.02]"
-          />
+          {/* decoding=sync + fetchpriority=high: Astro does not wait for
+              images before snapshotting the new page, and the prioritized
+              load keeps the hi-res variant ready for a synchronous decode,
+              so the morph snapshot contains pixels instead of an empty box. */}
+          <picture>
+            {/* sizes matches .post-reading-cover: max 44rem, 67rem in wide mode */}
+            {coverSet.sources.map(source => (
+              <source
+                type={source.type}
+                srcset={source.srcset}
+                sizes="(min-width: 1280px) 1072px, (min-width: 704px) 704px, 100vw"
+              />
+            ))}
+            <img
+              src={coverSet.src}
+              alt=""
+              width={coverSet.width}
+              height={coverSet.height}
+              loading="eager"
+              decoding="sync"
+              fetchpriority="high"
+              class="size-full object-cover transition duration-700 hover:scale-[1.02]"
+            />
+          </picture>
         </div>
       )
     }
